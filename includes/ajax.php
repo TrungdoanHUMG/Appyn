@@ -32,11 +32,11 @@ function ajax_searchbox() {
 			if( !empty($datos_informacion['version']) ) {
 				$return .= px_post_mod().'<span>';
 				if( !empty($datos_informacion['version']) ) {
-					$return .= __( 'Versión', 'appyn' ).': '.$datos_informacion['version'];
+					$return .= __( 'Version', 'appyn' ).': '.$datos_informacion['version'];
 				}
 				$dev_terms = wp_get_post_terms( $post->ID, 'dev', array('fields' => 'all'));
 				if( !empty($dev_terms) ) { 
-					$return .= '<br>'.__( 'Desarrollador', 'appyn' ).': '.$dev_terms[0]->name;
+					$return .= '<br>'.__( 'Developer', 'appyn' ).': '.$dev_terms[0]->name;
 				}
 				$return .= '</span>';
                 
@@ -101,13 +101,13 @@ function ajax_boxes_add(){
 	$content = ( isset($_POST['content']) ) ? $_POST['content'] : '';
 	$box_key = ( isset($_POST['keycount']) ) ? $_POST['keycount'] : 0;
 	echo '<div class="boxes-a">
-		<p><input type="text" id="custom_boxes-title-'.$box_key.'" class="widefat" name="custom_boxes['.$box_key.'][title]" value="" placeholder="'.__( 'Título para la caja', 'appyn' ).'"></p>
+		<p><input type="text" id="custom_boxes-title-'.$box_key.'" class="widefat" name="custom_boxes['.$box_key.'][title]" value="" placeholder="'.__( 'Title for the box', 'appyn' ).'"></p>
 		<p>'; ?>
 	<?php
 	wp_editor($content, 'custom_boxes-'.$box_key, array('textarea_name' => 'custom_boxes['.$box_key.'][content]', 'textarea_rows' => 5,'quicktags' => array('buttons' => 'strong,em,link,block,del,ins,img,ul,ol,li,code,close'))
 ); ?>
 	<?php echo '</p>
-		<p><a href="javascript:void(0)" class="delete-boxes button">'.__( 'Borrar caja', 'appyn' ).'</a></p>
+		<p><a href="javascript:void(0)" class="delete-boxes button">'.__( 'Delete box', 'appyn' ).'</a></p>
 		</div>';
 	die();
 }
@@ -119,12 +119,12 @@ function ajax_permanent_boxes_add(){
 	$content = ( isset($_POST['content']) ) ? $_POST['content'] : '';
 	$box_key = ( isset($_POST['keycount']) ) ? $_POST['keycount'] : 0;
 	echo '<div class="boxes-a">
-		<h4>'. sprintf( __( 'Caja permanente %s', 'appyn' ), '#'.($box_key+1) ) .'</h4>
-		<p><input type="text" id="permanent_custom_boxes-title-'.$box_key.'" class="widefat" name="permanent_custom_boxes['.$box_key.'][title]" value="" placeholder="'.__( 'Título para la caja', 'appyn' ).'"></p>
+		<h4>'. sprintf( __( 'Permanent box %s', 'appyn' ), '#'.($box_key+1) ) .'</h4>
+		<p><input type="text" id="permanent_custom_boxes-title-'.$box_key.'" class="widefat" name="permanent_custom_boxes['.$box_key.'][title]" value="" placeholder="'.__( 'Title for the box', 'appyn' ).'"></p>
 		<p>'; ?>
 	<?php wp_editor($content, 'permanent_custom_boxes-'.$box_key, array('textarea_name' => 'permanent_custom_boxes['.$box_key.'][content]', 'textarea_rows' => 5,'quicktags' => array('buttons' => 'strong,em,link,block,del,ins,img,ul,ol,li,code,close')) ); ?>
 	<?php echo '</p>
-		<p><a href="javascript:void(0)" class="delete-boxes button">'.__( 'Borrar caja', 'appyn' ).'</a></p>
+		<p><a href="javascript:void(0)" class="delete-boxes button">'.__( 'Delete box', 'appyn' ).'</a></p>
 		</div>';
 	die();
 }
@@ -294,40 +294,165 @@ add_action( 'wp_ajax_action_eps', 'eps_function' );
 add_action( 'wp_ajax_nopriv_action_eps', 'eps_function' );
 
 function eps_function() {
-	global $wpdb;
+	$url_app = $_POST['url_app'];
 
-	$type = $_POST['type'];
-	$nonce = sanitize_text_field( $_POST['nonce'] );
+	if ($url_app && strpos($url_app, 'play.google.com') !== false) {
+
+		global $wpdb;
 	
-	if ( ! wp_verify_nonce( $nonce, 'importgp_nonce' ) ) die ( '✋');
-
-	$eps = new EPS();
-
-	if( $type == "reimport" ) {
-		$post_id = $_POST['post_id'];
-		echo $eps->reimportPost( $post_id );
-	}
-	elseif( $type == "update" ) {
-		$post_id = $_POST['post_id'];
-		echo $eps->updatePost( $post_id );
-	}
-	elseif( $type == "create" ) {
-		if( isset($_POST['app_id']) ) {
-			$lang = appyn_options( 'edcgp_lang', get_locale() );
-			$url_app = 'https://play.google.com/store/apps/details?id='.$_POST['app_id'].'&hl='.$lang.'&gl=LA';
-		} else {
-			$url_app = $_POST['url_app'];
-			$pattern = '/hl=([^&]+)/';
-			if( ! preg_match($pattern, $url_app, $matches) ) {
+		$type = $_POST['type'];
+		$nonce = sanitize_text_field( $_POST['nonce'] );
+		
+		if ( ! wp_verify_nonce( $nonce, 'importgp_nonce' ) ) die ( '✋');
+	
+		$eps = new EPS();
+		if( $type == "create" ) {
+			if( isset($_POST['app_id']) ) {
 				$lang = appyn_options( 'edcgp_lang', get_locale() );
-				$url_app .= '&hl='.$lang.'&gl=LA';
+				$url_app = 'https://play.google.com/store/apps/details?id='.$_POST['app_id'].'&hl='.$lang.'&gl=LA';
+			} else {
+				$url_app = $_POST['url_app'];
+				$pattern = '/hl=([^&]+)/';
+				if( ! preg_match($pattern, $url_app, $matches) ) {
+					$lang = appyn_options( 'edcgp_lang', get_locale() );
+					$url_app .= '&hl='.$lang.'&gl=LA';
+				}
 			}
+			echo $eps->createPost( $url_app );
 		}
-		echo $eps->createPost( $url_app );
-	}
+	
+		exit;
 
-	exit;
+	}else {
+		global $wpdb;
+		$type = $_POST['type'];
+		$nonce = sanitize_text_field( $_POST['nonce'] );
+		$eps = new EPS();
+
+		if( $type == "create" ) {
+			$url_app = $_POST['url_app'];
+			$url_app = rtrim($url_app, '/');
+			$languages = [
+				'vi', 'pt', 'es', 'id', 'ru', 'th',
+				'ar', 'tr', 'it', 'fr', 'de', 'ko',
+				'ja', 'pl', 'zh', 'nl', 'hi', 'tw'
+			];
+			
+			echo $eps->createPostApk( $url_app );
+		}
+		exit;
+	}
 }
+
+// Thêm xử lý cho action 'update_post_action'
+add_action( 'admin_post_update_post_action', 'handle_update_post_action' );
+
+function handle_update_post_action() {
+    // Kiểm tra xem post_id có trong URL không
+    if ( isset( $_GET['post_id'] ) ) {
+        $post_id = intval( $_GET['post_id'] );
+
+		$eps = new EPS();
+		$eps->updatePost( $post_id );
+        // Gọi đến hàm updatePost với post_id
+		set_transient('post_update_success', true, 30);
+        // Sau khi xử lý xong, chuyển hướng quay lại trang post edit hoặc bất cứ đâu
+        wp_redirect( admin_url( 'post.php?post='.$post_id.'&action=edit' ) );
+        exit;
+    } else {
+        wp_die( __( 'Post ID không hợp lệ.', 'appyn' ) );
+    }
+}
+
+// Hiển thị thông báo thành công nếu transient tồn tại
+add_action('admin_notices', 'show_post_update_success_message');
+
+function show_post_update_success_message() {
+    // Kiểm tra nếu transient tồn tại
+    if (get_transient('post_update_success')) {
+        // Hiển thị thông báo thành công
+        ?>
+        <div id="message" class="notice notice-success is-dismissible updated">
+            <p><?php _e('Sync post data successfully.', 'appyn'); ?> 
+                <a href="<?php echo esc_url(get_permalink($_GET['post'])); ?>" target="_blank"><?php _e('View post', 'appyn'); ?></a>
+            </p>
+            <button type="button" class="notice-dismiss">
+                <span class="screen-reader-text"><?php _e('Dismiss this notice.', 'appyn'); ?></span>
+            </button>
+        </div>
+        <?php
+        // Xóa transient sau khi hiển thị
+        delete_transient('post_update_success');
+    }
+}
+
+function custom_admin_notice_dismiss_script() {
+    ?>
+    <script type="text/javascript">
+        (function($){
+            $(document).on('click', '.notice-dismiss', function(){
+                $(this).closest('.notice').fadeOut();
+            });
+        })(jQuery);
+    </script>
+    <?php
+}
+add_action('admin_footer', 'custom_admin_notice_dismiss_script');
+
+// Tạo lịch trình cron mỗi 12 giờ
+function custom_cron_schedule( $schedules ) {
+    $schedules['every_twelve_hours'] = array(
+        'interval' => 43200, // 12 giờ (43200 giây)
+        'display'  => __( 'Every 12 Hours' ),
+    );
+    return $schedules;
+}
+add_filter( 'cron_schedules', 'custom_cron_schedule' );
+
+// Tạo hook cho cron job
+function custom_cron_job_function() {
+    // Công việc muốn thực hiện
+    $args = array(
+        'post_type'      => 'post',
+        'posts_per_page' => -1, // Lấy tất cả các bài viết
+        'post_status'    => 'publish', // Chỉ lấy bài viết đã xuất bản
+    );
+    
+    $all_posts = get_posts($args);
+
+		if (!empty($all_posts)) {
+			foreach ($all_posts as $post) {
+				$post_id = $post->ID;
+
+				// Kiểm tra điều kiện dựa trên meta option 'px_ggplay'
+				$px_ggplay_value = get_post_meta( $post_id, "px_ggplay", true );
+				
+				if ($px_ggplay_value) {  // Chỉ cập nhật nếu 'px_ggplay' là true
+					try {
+						$eps = new EPS();
+						$eps->updatePost($post_id);
+					} catch (Exception $e) {
+						error_log("Error updating post ID $post_id: " . $e->getMessage());
+						// Tiếp tục với bài đăng tiếp theo
+						continue;
+					}
+				}
+			}
+	}
+}
+
+// Lên lịch cho cron job nếu chưa có
+if ( ! wp_next_scheduled( 'custom_cron_job' ) ) {
+    wp_schedule_event( time(), 'every_twelve_hours', 'custom_cron_job' );
+}
+
+// Kết nối với hook
+add_action( 'custom_cron_job', 'custom_cron_job_function' );
+
+
+
+
+
 
 add_action( 'wp_ajax_px_recaptcha_download_links', 'px_recaptcha_download_links' );
 add_action( 'wp_ajax_nopriv_px_recaptcha_download_links', 'px_recaptcha_download_links' );
@@ -388,7 +513,7 @@ function search_posts() {
 		endwhile;
 		echo '</ul>';
 	else :
-		echo '<div style="padding:5px 10px">'.__( 'No hay entradas', 'appyn' ).'</div>';
+		echo '<div style="padding:5px 10px">'.__( 'There are no entries', 'appyn' ).'</div>';
 	endif;
 
 	exit;
@@ -412,7 +537,6 @@ function search_mod_apps() {
         	'Expect' 		=> '',
 		),
 		'body' => array( 
-			'apikey' 	=> appyn_options( 'apikey', true ), 
 			'website'	=> get_site_url(),
 		),
 	) );
@@ -469,7 +593,6 @@ function mod_app_import() {
         	'Expect' 		=> '',
 		),
 		'body' => array( 
-			'apikey' 	=> appyn_options( 'apikey', true ), 
 			'website'	=> get_site_url(),
 		),
 	) );
@@ -505,10 +628,10 @@ function mod_app_import() {
 					$di['descripcion'] = $showData['description'];
 					
 				if( in_array('downloads', $mod_apps_data_gpl) )
-					$di['descargas'] = $showData['downloads'];
+					$di['downloads'] = $showData['downloads'];
 					
 				if( in_array('requirements', $mod_apps_data_gpl) )
-					$di['requerimientos'] = $showData['requires'];
+					$di['requirements'] = $showData['requires'];
 					
 				if( in_array('category', $mod_apps_data_gpl) )
 					$di['categoria_app'] = $showData['app_cat'];

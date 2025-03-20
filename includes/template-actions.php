@@ -168,7 +168,7 @@ function func_action_home_blog() {
 				?>
 			</div>
 			<?php if( $query->found_posts > $blog_posts_home_limite ):?>
-				<p><a href="<?php echo get_post_type_archive_link( 'blog' ); ?>" class="more"><?php echo __( 'View more', 'appyn' ); ?></a></p>
+				<p><a href="<?php echo get_post_type_archive_link( 'blog' ); ?>" class="more"><?php echo __( 'See more', 'appyn' ); ?></a></p>
 			<?php endif; ?>
 		</div>
 	<?php
@@ -229,7 +229,7 @@ function func_action_home_categories() {
 					?>
 				</div>
 				<?php if( $wp_query->found_posts > $categories_home_limite ) { ?>
-					<p><a href="<?php echo get_term_link( $cat->term_id, 'category' ); ?>" class="more"><?php echo __( 'View more', 'appyn' ); ?></a></p>
+					<p><a href="<?php echo get_term_link( $cat->term_id, 'category' ); ?>" class="more"><?php echo __( 'See more', 'appyn' ); ?></a></p>
 				<?php } ?>
 			</div>
 			<?php endif; wp_reset_query(); ?>
@@ -340,8 +340,8 @@ function order_default($t = '') {
 			do_action( 'func_caja_apps_relacionadas' );
 		}
 		
-		if( activate_versions_boxes('apps_desarrollador') ) {
-			do_action( 'func_caja_apps_desarrollador' );
+		if( activate_versions_boxes('apps_developer') ) {
+			do_action( 'func_caja_apps_developer' );
 		}
 
 		if( activate_versions_boxes('cajas_personalizadas') ) {
@@ -365,7 +365,7 @@ function order_default($t = '') {
 		do_action( 'func_caja_video' );
 		do_action( 'func_caja_enlaces_descarga' );
 		do_action( 'func_caja_apps_relacionadas' );
-		do_action( 'func_caja_apps_desarrollador' );
+		do_action( 'func_caja_apps_developer' );
 		do_action( 'func_caja_cajas_personalizadas' );
 		do_action( 'func_caja_tags' );
 		$pcb = get_option( 'permanent_custom_boxes' );
@@ -512,9 +512,9 @@ function func_caja_versiones($full = false, $cvn = array()) {
 			<table style="margin:0;">
 				<thead>
 					<tr>
-						<th><?php echo __( 'Versión', 'appyn' ); ?></th>
+						<th><?php echo __( 'Version', 'appyn' ); ?></th>
 						<th><?php echo __( 'Peso', 'appyn' ); ?></th>
-						<th><?php echo __( 'Requerimientos', 'appyn' ); ?></th>
+						<th><?php echo __( 'Requirements', 'appyn' ); ?></th>
 						<th style="width:100px"><?php echo __( 'Fecha', 'appyn' ); ?></th>
 					</tr>
 				</thead>
@@ -553,7 +553,7 @@ function func_caja_versiones($full = false, $cvn = array()) {
 				echo '<tr>
 						<td><a href="'. $link .'"'.$tb.'>'.(( !empty($inf['version']) ) ? $inf['version'] : '-').'</a></td>
 						<td>'.(( !empty($inf['tamano']) ) ? $inf['tamano'] : '-').'</td>
-						<td>'.(( !empty($inf['requerimientos']) ) ? $inf['requerimientos'] : '-').'</td>
+						<td>'.(( !empty($inf['requirements']) ) ? $inf['requirements'] : '-').'</td>
 						<td>'.(( !empty($inf['fecha_actualizacion']) ) ? date_i18n( 'd/m/Y', strtotime(strtr($inf['fecha_actualizacion'], $date_change)) ) : '-').'</td>
 					</tr>';		
 				}	
@@ -577,7 +577,7 @@ function func_caja_versiones($full = false, $cvn = array()) {
 					echo '<tr>
 							<td><a href="'. $link.'"'.$tb.'>'.(( !empty($inf['version']) ) ? $inf['version'] : '-').'</a></td>
 							<td>'.(( !empty($inf['tamano']) ) ? $inf['tamano'] : '-').'</td>
-							<td>'.(( !empty($inf['requerimientos']) ) ? $inf['requerimientos'] : '-').'</td>
+							<td>'.(( !empty($inf['requirements']) ) ? $inf['requirements'] : '-').'</td>
 							<td>'.(( !empty($inf['fecha_actualizacion']) ) ? date_i18n( 'd/m/Y', strtotime(strtr($inf['fecha_actualizacion'], $date_change)) ) : '-').'</td>
 						</tr>';	
 						$i++;
@@ -585,7 +585,7 @@ function func_caja_versiones($full = false, $cvn = array()) {
 				} else {
 					if( current_user_can('administrator') ) {
 						echo '<tr>
-							<td colspan="100%"><a href="'.get_edit_post_link( $post ).'"><i>'.__( 'Para esta versión falta completar los datos', 'appyn' ).'</i></a>
+							<td colspan="100%"><a href="'.get_edit_post_link( $post ).'"><i>'.__( 'Para esta version falta completar los datos', 'appyn' ).'</i></a>
 						</tr>';
 					}
 				}	
@@ -614,7 +614,7 @@ function func_caja_novedades() {
 
 	?>
 	<div id="novedades" class="box">
-		<h2 class="box-title"><?php echo __( 'Novedades', 'appyn' ); ?></h2>
+		<h2 class="box-title"><?php echo __( 'What news ?', 'appyn' ); ?></h2>
 		<div class="box-content entry">
 			<?php echo wpautop( $datos_informacion['novedades'] ); ?>
 		</div>
@@ -722,20 +722,10 @@ function func_caja_video() {
 	?>
 	<div class="box">
 		<h2 class="box-title"><?php echo __( 'Video', 'appyn' ); ?></h2>
-		<div class="iframeBoxVideo" data-id="<?php echo $datos_video['id']; ?>">
-		<?php
-		if( is_amp_px() ) {
-			echo '<amp-youtube data-videoid="'.$datos_video['id'].'" layout="responsive" width="560" height="315"></amp-youtube>';
-		} else {
-			$appyn_lazy_loading = ( get_option('appyn_lazy_loading') ) ? get_option('appyn_lazy_loading') : NULL;
-			if( $appyn_lazy_loading == 1 ) {
-			?>
-				<iframe width="730" height="360" src="" data-src="https://www.youtube.com/embed/<?php echo $datos_video['id']; ?>" style="border:0; overflow:hidden;" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="lazyload"></iframe>
-			<?php } else { ?>
-				<iframe width="730" height="360" src="https://www.youtube.com/embed/<?php echo $datos_video['id']; ?>" style="border:0; overflow:hidden;" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-			<?php }
-		} ?>
-		</div>
+	
+			<video width="100%" controls autoplay>
+			<source src="	<?php echo $datos_video['id']; ?>" type="video/mp4">
+			</video>
 	</div>
 	<?php
 }
@@ -823,9 +813,9 @@ function func_caja_cajas_personalizadas() {
 	}
 }
 
-add_action( 'func_caja_apps_desarrollador', 'func_caja_apps_desarrollador' );
+add_action( 'func_caja_apps_developer', 'func_caja_apps_developer' );
 
-function func_caja_apps_desarrollador() { 
+function func_caja_apps_developer() { 
 	global $post;
 
 	$dev_terms = wp_get_post_terms( $post->ID, 'dev', array('fields' => 'all'));
@@ -841,7 +831,7 @@ function func_caja_apps_desarrollador() {
 	) ) );
 	if( $query->have_posts() ) { ?>
 	<div class="box rlat">
-		<h2 class="box-title"><?php echo __( 'Developer Apps', 'appyn' ); ?></h2>
+		<h2 class="box-title"><?php echo __( 'Apps del developer', 'appyn' ); ?></h2>
 		<div class="baps">
 		<?php while( $query->have_posts() ) : $query->the_post();
 		get_template_part( 'template-parts/loop/app-related' ); 
@@ -1215,7 +1205,7 @@ function func_list_download_links($post_id = false, $get_opt = false, $get_dl = 
 
 	if( $get_dl ) {
 		if( $adl && $get_opt ) {
-			echo '<div class="bxt'. $class .'">'.__( 'Download links', 'appyn' ).' - '. $datos_download['links_options'][($get_opt-1)]['texto'] .'</div>';
+			echo '<div class="bxt'. $class .'">'.__( 'Enlace de descarga', 'appyn' ).' - '. $datos_download['links_options'][($get_opt-1)]['texto'] .'</div>';
 		} else {
 			echo '<div class="bxt'. $class .'">'.__( 'Download links', 'appyn' ).'</div>';
 		}
@@ -1289,8 +1279,27 @@ function func_list_download_links($post_id = false, $get_opt = false, $get_dl = 
 					}
 					if( $adl == 1 || $adl == 3 )
 						$tb = true;
+					global $post;
+					$px_app_id = get_post_meta( $post->ID, 'px_app_id', true );
+					// Lấy tên tệp từ URL (ví dụ: mega.privacy.android.app)
+					$file_name =$px_app_id;
 
-					echo '<li><a href="'.$link.'" '.( ($tb || empty($get_dl)) ? 'target="_blank"' : '' ).''.((isset($element['follow'])) ? ' rel="follow"' : ' rel="nofollow"').' class="buttond downloadAPK dapk_b"><i class="fa fa-download"></i> '.$element['texto'].'</a></li>';
+					// Tạo URL tải với chỉ tên file APK
+					$px_ggplay_value = get_post_meta($post->ID, 'px_ggplay', true);
+					if ($px_ggplay_value == false) {
+						$file_name = $post->post_name;
+					}
+			
+
+					$download_url = add_query_arg('apk_download', urlencode($file_name), get_permalink());
+					?>
+
+					<li>
+						<a id="download-apk-button" href="<?php echo esc_url($download_url); ?>" class="buttond downloadAPK dapk_b">
+							<i class="fa fa-download"></i> Download
+						</a>
+					</li>
+					<?php 
 				endif; 
 			endforeach;
 		}
@@ -1305,20 +1314,8 @@ function func_list_download_links($post_id = false, $get_opt = false, $get_dl = 
 	}
 
 	if( $dltbu = appyn_options( 'download_links_telegram_button_url', true ) ) {
-		if (is_single()) {
-			$post_slug = get_post_field( 'post_name', get_post() ); 
-			if ($post_slug === 'fliki-ai'){
-				echo '<p style="text-align: center;"><a href="https://fliki.ai/?via=vanthanh" target="_blank" id="dl-f" class="buttond "><svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg" class="fliki_icon"><g stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style=""><path d="m10 5h-3c-1.10457 0-2 .89543-2 2v10c0 1.1046.89543 2 2 2h10c1.1046 0 2-.8954 2-2v-2"></path><path d="m11.5 12.5 8.5001-8.49989m0 0 .0004 5.99989m-.0004-5.99989-6.0005.00025"></path></g></svg> '. ( ( ! $dltbt ) ? __( 'Official Website', 'appyn' ) : $dltbt ) .'</a></p>';
-			}
-		}
-		if (is_single()) {
-			$post_slug = get_post_field( 'post_name', get_post() ); 
-			if ($post_slug === 'pollo-ai'){
-				echo '<p style="text-align: center;"><a href="https://pollo.ai/?ref=njq5mgj" target="_blank" id="dl-f" class="buttond "><svg fill="none" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg" class="fliki_icon"><g stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" style=""><path d="m10 5h-3c-1.10457 0-2 .89543-2 2v10c0 1.1046.89543 2 2 2h10c1.1046 0 2-.8954 2-2v-2"></path><path d="m11.5 12.5 8.5001-8.49989m0 0 .0004 5.99989m-.0004-5.99989-6.0005.00025"></path></g></svg> '. ( ( ! $dltbt ) ? __( 'Official Website', 'appyn' ) : $dltbt ) .'</a></p>';
-			}
-		}
 		$dltbt = appyn_options( 'download_links_telegram_button_text', true );
-		echo '<p style="text-align: center;"><a href="'. $dltbu .'" target="_blank" id="dl-telegram" class="buttond "><i class="fab fa-telegram-plane"></i> '. ( ( ! $dltbt ) ? __( 'JOIN OUR TELEGRAM GROUP', 'appyn' ) : $dltbt ) .'</a></p>';
+		echo '<p style="text-align: center;"><a href="'. $dltbu .'" target="_blank" id="dl-telegram" class="buttond "><i class="fab fa-telegram-plane"></i> '. ( ( ! $dltbt ) ? __( 'ÚNETE A NUESTRO GRUPO DE TELEGRAM', 'appyn' ) : $dltbt ) .'</a></p>';
 	}
 
 	echo px_info_install();
@@ -1678,11 +1675,79 @@ add_action( 'template_redirect', function(){
 	$adl = get_option( 'appyn_download_links', null );
 	$get_dl = get_query_var( 'download' );
 
-	if( $adl == 3 && is_single() && $get_dl ) {
+	if(is_single() && $get_dl ) {
 		get_template_part( 'template-parts/template-download' );
 		exit;
 	}
 });
+
+
+// Xử lý tải file APK khi người dùng truy cập trang bài viết đơn
+// Xử lý việc tải file APK khi người dùng truy cập trang bài viết đơn
+function serve_apk_on_single_page() {
+    // Kiểm tra nếu là trang bài viết đơn và có tham số 'apk_download'
+    if (is_single() && isset($_GET['apk_download'])) {
+        // Tên file APK từ tham số query string
+        $apk_file = basename($_GET['apk_download']); // Chỉ lấy tên tệp để tránh truy cập bất hợp pháp
+
+        // Tạo URL đầy đủ của file APK trên server
+        $file_url = 'https://modgara.com/downloads/ggplay/' . $apk_file.'.apk';
+
+		$px_ggplay_value = get_post_meta($post->ID, 'px_ggplay', true);
+		if ($px_ggplay_value == false) {
+			$datos_download = get_datos_download($post->ID);
+			$file_url = $datos_download['links_options'][0]['link']; // URL of the file to download		
+		}
+		 if (!empty($apk_file)) {
+			// Lấy tên file từ URL
+			global $post;
+			$post_title = get_the_title(); // Lấy tiêu đề từ bài viết (hoặc từ nguồn nào bạn có)
+			$post_version ="_";
+			$post_id = $post->ID;
+			$datos_informacion = get_post_meta($post_id, 'datos_informacion', true); 
+
+			if (!empty($datos_informacion['version'])) {
+				if ($datos_informacion['version'] != "Varies with device") {
+					$post_version = "_".$datos_informacion['version'];
+				}
+			}
+			$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https" : "http";
+			$file_url_current = $protocol . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+			$domain_name = parse_url($file_url_current, PHP_URL_HOST); // Lấy tên miền từ URL file
+			// Xử lý tiêu đề bài viết và tên miền để tạo tên file
+
+			$file_name = $post_title . '_' . $domain_name . $post_version . '.apk'; // Tên file cuối cùng
+
+			// Khởi tạo cURL để tải nội dung file từ URL
+			$ch = curl_init($file_url);
+
+			// Thiết lập các tùy chọn cURL
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, false); // Xuất trực tiếp ra trình duyệt
+			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Theo dõi chuyển hướng nếu có
+			curl_setopt($ch, CURLOPT_HEADER, false); // Không lấy header từ phản hồi
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10); // Thời gian chờ kết nối
+			curl_setopt($ch, CURLOPT_TIMEOUT, 0); // Không giới hạn thời gian thực thi
+
+			// Thiết lập tiêu đề HTTP để tải file APK
+			header('Content-Type: application/vnd.android.package-archive');
+			header('Content-Disposition: attachment; filename="' . $file_name . '"');
+
+			// Thực hiện cURL và xuất trực tiếp nội dung file
+			curl_exec($ch);
+
+			// Kiểm tra lỗi cURL
+			if (curl_errno($ch)) {
+				echo 'Lỗi: ' . curl_error($ch);
+			}
+
+			// Đóng cURL
+			curl_close($ch);
+			exit; // Kết thúc xử lý sau khi tải file
+		}
+    }
+}
+add_action('template_redirect', 'serve_apk_on_single_page');
+
 
 add_action( 'wp_head', function(){
 
@@ -1719,18 +1784,18 @@ function func_pxdae() {
 
 function pxdas_developer() {
 	global $post;
-    $desarrollador = get_datos_info( 'desarrollador' ); 
+    $developer = get_datos_info( 'developer' ); 
 
 	$output = '';
 
-	if( !empty($desarrollador) ) {
+	if( !empty($developer) ) {
 		$output .= '<div class="da-s"><b>'.__( 'Developer', 'appyn' ).'</b><br>';
-		$output .= $desarrollador;
+		$output .= $developer;
 		$output .= '</div>';
 	} else {
 		$dev_terms = wp_get_post_terms( $post->ID, 'dev', array('fields' => 'all'));
 		if( !empty($dev_terms) ) {
-			$output .= '<div class="da-s"><b>'.__( 'Desarrollador', 'appyn' ).'</b><br>';
+			$output .= '<div class="da-s"><b>'.__( 'Developer', 'appyn' ).'</b><br>';
 			$output .= '<a href="'.get_term_link($dev_terms[0]->term_id).'">'.$dev_terms[0]->name.'</a>';
 			$output .= '</div>';
 		}
@@ -1742,13 +1807,13 @@ function pxdas_developer() {
 function pxdas_released_on() {
     $released_on = get_datos_info( 'released_on' ); 
 	
-	echo (!empty($released_on)) ? '<div class="da-s"><b>'.__( 'Released on', 'appyn' ).'</b><br>'.$released_on.'</div>' : '';
+	echo (!empty($released_on)) ? '<div class="da-s"><b>'.__( 'Release Date', 'appyn' ).'</b><br>'.$released_on.'</div>' : '';
 }
 
 function pxdas_updated() {
     $fecha_actualizacion = get_datos_info( 'fecha_actualizacion' ); 
 	
-	echo (!empty($fecha_actualizacion)) ? '<div class="da-s"><b>'.__( 'Updated', 'appyn' ).'</b><br>'.$fecha_actualizacion.'</div>' : '';
+	echo (!empty($fecha_actualizacion)) ? '<div class="da-s"><b>'.__( 'Update on', 'appyn' ).'</b><br>'.$fecha_actualizacion.'</div>' : '';
 }
 
 function pxdas_size() {
@@ -1764,13 +1829,13 @@ function pxdas_version() {
 }
 
 function pxdas_requirements() {
-    $requerimientos = get_datos_info( 'requerimientos' ); 
+    $requirements = get_datos_info( 'requirements' ); 
 
-	echo (!empty($requerimientos)) ? '<div class="da-s"><b>'.__( 'Requirements', 'appyn' ).'</b><br>'.$requerimientos.'</div>' : ''; 
+	echo (!empty($requirements)) ? '<div class="da-s"><b>'.__( 'Requirements', 'appyn' ).'</b><br>'.$requirements.'</div>' : ''; 
 }
 
 function pxdas_downloads() {
-    $descargas = get_datos_info( 'descargas' );
+    $descargas = get_datos_info( 'downloads' );
 
 	echo (!empty($descargas)) ? '<div class="da-s"><b>'.__( 'Downloads', 'appyn' ).'</b><br>'.$descargas.'</div>' : '';
 }
@@ -1790,13 +1855,13 @@ function px_cat_icon_field( $cat ) {
 ?>  
 	<tr class="form-field">  
 		<th scope="row" valign="top">  
-			<label for="px_cat_icon"><?php echo __( 'Ícono', 'appyn') ; ?></label>  
+			<label for="px_cat_icon"><?php echo __( 'Icon', 'appyn') ; ?></label>  
 		</th>  
 		<td>
 			<ul class="icossss">
 			<?php 
-			echo '<li><label><input type="radio" name="px_cat_icon" id="px_cat_icon" value=""'.( empty($px_cat_icon) ? ' checked' : '').'><span style="font-size:12px;"> ' . __( 'Ninguno', 'appyn' ) . '</span></label></li>';
-			echo '<li><label><input type="radio" name="px_cat_icon" id="px_cat_icon" value="default"'.( ($px_cat_icon == 'default') ? ' checked' : '').'><span class="cccc"></span><span style="font-size:12px;">' . __( 'Por defecto', 'appyn' ) . '</span></label></li>';
+			echo '<li><label><input type="radio" name="px_cat_icon" id="px_cat_icon" value=""'.( empty($px_cat_icon) ? ' checked' : '').'><span style="font-size:12px;"> ' . __( 'Ninja', 'appyn' ) . '</span></label></li>';
+			echo '<li><label><input type="radio" name="px_cat_icon" id="px_cat_icon" value="default"'.( ($px_cat_icon == 'default') ? ' checked' : '').'><span class="cccc"></span><span style="font-size:12px;">' . __( 'For defect', 'appyn' ) . '</span></label></li>';
 			foreach( $catsapp as $key => $c ) {
 				$key = str_replace('_', '-', (strtolower($key)));
 				echo '<li><label><input type="radio" name="px_cat_icon" id="px_cat_icon" value="'.$key.'"'.( ($px_cat_icon == $key) ? ' checked' : '').'><span class="cccc '.$key.'"></span><span style="font-size:12px;">' . $c . '</span></label></li>';
@@ -1845,9 +1910,7 @@ function px_add_css( $echo = false ) {
 			#subheader.np {
 				padding-top: 15px;
 			}
-			#subheader {
-				padding-top: 30px;
-			}
+			
 		}';
 	}
 	if( appyn_options( 'sticky_header' ) ) {
@@ -1859,9 +1922,7 @@ function px_add_css( $echo = false ) {
 		#subheader.np {
 			padding-top: 15px;
 		}
-		#subheader {
-			padding-top: 20px;
-		}';
+		';
 	}
 
 	if( appyn_options( 'title_2_lines' ) ) {
@@ -2037,11 +2098,6 @@ function redirect_download() {
 	if( appyn_options( 'download_links_permalinks' ) == 1 ) {
 		
 		$option = get_datos_download()['option'];
-
-		if( end($l) == "download" && ($option != "links" && $option != "direct-link") ) {
-			wp_redirect(dirname($current_url));
-			exit;
-		}
 
 		$pu = parse_url($current_url);
 
@@ -2271,19 +2327,13 @@ function px_widget_add_option_mod_apps( $widget, $return, $instance ) {
     ?>
     <p>
         <label>
-            <input type="checkbox" name="<?php echo $widget->get_field_name( 'mod_apps_widget' ); ?>" value="1" <?php checked( isset( $instance['mod_apps_widget'] ) ? $instance['mod_apps_widget'] : '', '1' ); ?>> <?php echo __( 'Solo apps modificadas', 'appyn' ); ?> 
+            <input type="checkbox" name="<?php echo $widget->get_field_name( 'mod_apps_widget' ); ?>" value="1" <?php checked( isset( $instance['mod_apps_widget'] ) ? $instance['mod_apps_widget'] : '', '1' ); ?>> <?php echo __( 'Solo mod apps', 'appyn' ); ?> 
         </label>
     </p>
     <?php
 }
 
-add_action('wp_ajax_action_dtlma', 'appyn_delete_transient_latest_mod_apps');
 
-function appyn_delete_transient_latest_mod_apps() {
-	delete_transient( 'appyn_results_latest_mod_apps' );
-	wp_redirect( admin_url( 'admin.php?page=appyn_mod_apps' ) );
-    exit;
-}
 
 add_action('wp_ajax_action_dtla', 'appyn_delete_transient_latest_apps');
 

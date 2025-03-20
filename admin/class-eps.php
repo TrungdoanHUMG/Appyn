@@ -18,22 +18,21 @@ class EPS {
     public function __construct() {
         
         $this->dca = appyn_options( 'dedcgp_descamp_actualizar', true ) ? appyn_options( 'dedcgp_descamp_actualizar', true ) : array();
-        $this->check_APIKey();
     }
 
-    private function check_APIKey() {
-        if( empty(appyn_options( 'apikey', true )) ) {
-            $output = array();
-            $output['response'] = __( 'Error: La API Key es inválida.', 'appyn' ).' <a href="https://themespixel.net/en/docs/appyn/api-key/" target="_blank">'.__( 'Más información', 'appyn' ).'</a>';
-            die(json_encode($output));
-        }
-    }
 
     private function check_url_app() {
 
-        if( empty($this->url_app) ){
+        if (empty($this->url_app) || 
+        !preg_match('/https?:\/\/(www\.)?play\.google\.com/i', $this->url_app)){
             $output = array();
-            $output['response'] = __( 'Error: No hay URL de Playstore en este post', 'appyn' );
+            $output['response'] = __( 'Lỗi: Sai đường dẫn, Vui lòng nhập URL Google Play', 'appyn' );        
+            $output['error_field'] = 'consiguelo';
+            die(json_encode($output));
+        }
+        if (empty($this->url_app)){
+            $output = array();
+            $output['response'] = __( 'Lỗi: Không có URL Playstore trong bài đăng này', 'appyn' );        
             $output['error_field'] = 'consiguelo';
             die(json_encode($output));
         }
@@ -43,7 +42,7 @@ class EPS {
 
         if( ! get_http_response_code( $this->url_app ) ) {
             $output = array();
-            $output['response'] = __( 'Error: Al parecer la URL no existe. Verifique nuevamente.', 'appyn' );
+            $output['response'] = __( 'Lỗi: Có vẻ như URL không tồn tại. Vui lòng kiểm tra lại..', 'appyn' );
             $output['error_field'] = 'consiguelo';
             die(json_encode($output));
         }
@@ -52,47 +51,108 @@ class EPS {
     private function getData($get_apk = true) {
         
         $this->options['edcgp_sapk'] = appyn_options( 'edcgp_sapk', true );
-
-        $body = array( 
-            'apikey' 	=> appyn_options( 'apikey', true ),
-            'website'	=> get_site_url(),
-            'app'		=> trim($this->url_app)
-        );
-
-        if( !$this->options['edcgp_sapk'] && $get_apk == true ) {
-            $body['apk'] = "true";
-        }
         
         $output = array();
 
-        $url = API_URL.'/v2/gplay';
+        $parsed_url = parse_url($this->url_app);
+        parse_str($parsed_url['query'], $query_params);
+        $app_id = $query_params['id'] ?? null;
+        $hour = intval( current_time( 'H' ) );
+        if ( $hour >= 0 && $hour < 6 ) {
+            // Từ 0h đến 6h sáng
+            // Gọi đến API dự phòng
+            $proxy_api_url = 'https://modgara.com/api/proxy/get-data/' . $app_id;
+            $proxy_response = wp_remote_get( $proxy_api_url, array(
+                'method'      => 'GET',
+                'timeout' => 60,
+            ) );
 
-        $response = wp_remote_post( $url, array(
-            'method'      => 'POST',
-            'timeout'     => 60,
-            'blocking'    => true,
-            'sslverify'   => false,
-            'headers'     => array(
-                'Referer' 		=> get_site_url(),
-                'Cache-Control' => 'max-age=0',
-                'Expect' 		=> '',
-            ),
-            'body' => $body,
+        } 
+        
+        $url = 'https://modgara.com/api/app_google_play/' . $app_id;
+
+        $response = wp_remote_get( $url, array(
+            'method'      => 'GET',
+            'timeout' => 60,
         ) );
-
+        
+        
         if ( ! is_wp_error( $response ) ) {
             $bot = json_decode($response['body'], true);
-            $status = (isset($bot['status'])) ? $bot['status'] : false;
+            $this->bot_info = $bot;
+            $proxy_url_apk = 'https://modgara.com/api/proxy/get-apk/' . $app_id;
+            $price_string = $this->bot_info['app_price'];
+            $price_number = floatval(str_replace('$', '', $price_string)); // 0.24
+        
+            // So sánh với 0
+            if($price_number > 0){
 
-            if( $status == 'error' || !$status ) {
-                $output['response'] = 'Error: '. $bot['response'];
-                die( json_encode($output) );
             }
+            else{
+                $proxy_response_apk = wp_remote_post( $proxy_url_apk, array(
+                    'method'      => 'GET',
+                    'timeout'     => 60,
+                ) );
+            }
+
+            if (empty($this->bot_info['app_version'])) {
+                // Nếu app_version null, gọi đến API dự phòng và cập nhật bot_info
+                $proxy_url = 'https://modgara.com/api/proxy/get-data/' . $app_id;
+                $proxy_response = wp_remote_get($proxy_url, array(
+                    'method' => 'GET',
+                    'timeout' => 60,
+                ));
+                if (!is_wp_error($proxy_response)) {
+                    $url = 'https://modgara.com/api/app_google_play/' . $app_id;
+                    $response = wp_remote_post( $url, array(
+                        'method'      => 'GET',
+                        'timeout'     => 60,
+                    ) );
+                    $bot = json_decode($response['body'], true);
+                } else {
+                    $output['response'] = $proxy_response->get_error_message();
+                    die(json_encode($output));
+                }
+            }
+            if (empty($this->bot_info['app_version'])) {
+                // Nếu app_version null, gọi đến API dự phòng và cập nhật bot_info
+                $proxy_url = 'https://modgara.com/api/proxy/get-data/' . $app_id;
+                $proxy_response = wp_remote_get($proxy_url, array(
+                    'method' => 'GET',
+                    'timeout' => 60,
+                ));
+                if (!is_wp_error($proxy_response)) {
+                    $url = 'https://modgara.com/api/app_google_play/' . $app_id;
+                    $response = wp_remote_post( $url, array(
+                        'method'      => 'GET',
+                        'timeout'     => 60,
+                    ) );
+                    $bot = json_decode($response['body'], true);
+                } else {
+                    $output['response'] = $proxy_response->get_error_message();
+                    die(json_encode($output));
+                }
+            }
+
+            if (empty($this->bot_info['app_size'])) {
+                $url = 'https://modgara.com/api/app_google_play/' . $app_id;
+                $response = wp_remote_get( $url, array(
+                    'method'      => 'GET',
+                    'timeout' => 60,
+                ) );
+                $bot = json_decode($response['body'], true);
+                $this->bot_info = $bot;
+            }
+
+            
             return $bot;
         } else {
             $output['response'] = $response->get_error_message();
             die( json_encode($output) );
+            return $bot;
         }
+        
+        
     }
 
     public function showData( $url ) {
@@ -103,32 +163,37 @@ class EPS {
 
     }
 
+    
     private function import_process() {
+   
 
         $bot = $this->getData();
 
-        $this->bot_info = $bot['app'];
+     
+
+        $this->bot_info = $bot;
+        $parts = preg_split('/[.\n]/', $this->bot_info['app_description'], 2);
+
 
         $this->info_app = array();
-        $this->info_app['nombre']  				= $this->bot_info['title'];
-        $this->info_app['contenido']  			= $this->bot_info['content'];
-        $this->info_app['descripcion']  		= $this->bot_info['description'];
-        $this->info_app['fecha_actualizacion']  = $this->bot_info['date'];
-        $this->info_app['released_on']          = $this->bot_info['released_on'];
-        $this->info_app['last_update'] 		 	= $this->bot_info['last_update'];
-        $this->info_app['version']  			= $this->bot_info['version'];
-        $this->info_app['requerimientos']  		= $this->bot_info['requires'];
-        $this->info_app['novedades']  			= $this->bot_info['whats_new'];
-        $this->info_app['imagecover']  			= $this->bot_info['icon'];
-        $this->info_app['video']  				= $this->bot_info['video'];
-        $this->info_app['tamano']  				= $this->bot_info['size'];
-        $this->info_app['categoria']  			= $this->bot_info['cat'];
-        $this->info_app['categoria_app']  		= $this->bot_info['app_cat'];
-        $this->info_app['desarrollador']  		= $this->bot_info['developer'];
-        $this->info_app['pago']  				= $this->bot_info['is_pay'];
-        $this->info_app['descargas']  			= $this->bot_info['downloads'];
-        $this->info_app['app_id']               = $this->bot_info['app_id'];
-        
+        $this->info_app['nombre']                = $this->bot_info['app_title'];            // Tên ứng dụng
+        $this->info_app['contenido']             = $parts[0];      // Nội dung ứng dụng
+        $this->info_app['descripcion']           = $parts[0];      // Mô tả ứng dụng
+        $this->info_app['fecha_actualizacion']    = $this->bot_info['app_updated_on'];      // Ngày cập nhật
+        $this->info_app['released_on']           = $this->bot_info['app_released_on'];     // Ngày phát hành
+        $this->info_app['last_update']           = $this->bot_info['app_updated_on'];      // Lần cập nhật cuối
+        $this->info_app['version']               = $this->bot_info['app_version'];         // Phiên bản ứng dụng
+        $this->info_app['requirements']        = $this->bot_info['app_requires_android'];// Yêu cầu Android
+        $this->info_app['novedades']             = $this->bot_info['app_what_news'];       // Những cập nhật mới
+        $this->info_app['imagecover']            = $this->bot_info['app_image'];           // Hình ảnh chính (cover)
+        $this->info_app['video']                 = $this->bot_info['app_video'];                                     // Không có thông tin video trong dữ liệu cung cấp
+        $this->info_app['tamano']                =$this->bot_info['app_size'];;                                     // Kích thước không được cung cấp
+        $this->info_app['categoria']             = 'Games';                                // Ví dụ: thể loại "Games"
+       
+        $this->info_app['developer']             = $this->bot_info['app_dev'];             // Nhà phát triển
+        $this->info_app['pago']                  = '';                                     // Thông tin trả phí không có trong dữ liệu
+        $this->info_app['downloads']             = $this->bot_info['app_download'];                                     // Không có thông tin lượt tải
+        $this->info_app['app_id']                = $this->bot_info['app_id'];    
         $this->options = array();
         $this->options['edcgp_post_status']     = appyn_options( 'edcgp_post_status' );
         $this->options['edcgp_create_category'] = appyn_options( 'edcgp_create_category' );
@@ -137,28 +202,7 @@ class EPS {
         $this->options['edcgp_sapk']			= appyn_options( 'edcgp_sapk' );
         $this->options['edcgp_mc']              = appyn_options( 'edcgp_mc' );
         $this->options['edcgp_eaa']             = appyn_options( 'edcgp_eaa' );
-
-        $n = 0;
-        foreach($this->bot_info['screenshots'] as $screenshot) { 
-            if( $n < $this->options['edcgp_extracted_images'] ) {
-                $this->info_app['imagenes'][$n] = $screenshot;
-            }
-            $n++;
-        }	
-        
-        if( $this->options['edcgp_create_category'] != 1 ) {
-            require_once( ABSPATH . '/wp-admin/includes/taxonomy.php');
-            $this->term_id = term_exists($this->info_app['categoria'], 'category');
-        
-            if( !$this->term_id ) {
-                $cat_defaults = array(
-                    'cat_ID' => 0,
-                    'cat_name' => $this->info_app['categoria'],
-                    'taxonomy' => 'category'
-                );
-                $this->term_id = wp_insert_category($cat_defaults);
-            }
-        }
+   
     }
 
     public function createPost( $url_app ) {
@@ -175,25 +219,23 @@ class EPS {
                 
         $my_post = array(
             'post_title'    => wp_strip_all_tags( $this->info_app['nombre'] ),
-            'post_content'  => $this->info_app['contenido'],
+            'post_content'  => "",
             'post_author'   => get_current_user_id(),
         );
+
         if( $this->options['edcgp_post_status'] == 1 ) {
             $my_post['post_status'] = 'publish';
         } else {
             $my_post['post_status'] = 'draft';
         }
 
-        if( $this->options['edcgp_create_category'] != 1 ) {
-            $my_post['post_category'] = array($this->term_id);
-        }
 
         $this->post_id = wp_insert_post( $my_post );
 
         if( $this->post_id ) {
             $this->output['post_id'] = $this->post_id;
             $this->info = __( 'Información importada.', 'appyn' )."\n";
-            $this->output['info_text'] = '<i class="fa fa-check"></i> '.sprintf(__( 'Entrada "%s" creada.', 'appyn' ), $this->info_app['nombre']).' <a href="'.get_edit_post_link($this->post_id).'" target="_blank">'.__( 'Ver post', 'appyn' ).'</a>';
+            $this->output['info_text'] = '<i class="fa fa-check"></i> '.sprintf(__( 'Entry "%s" created.', 'appyn' ), $this->info_app['nombre']).' <a href="'.get_edit_post_link($this->post_id).'" target="_blank">'.__( 'See post', 'appyn' ).'</a>';
         }
 
         return $this->after_process( 'create' );
@@ -201,91 +243,30 @@ class EPS {
 
     public function updatePost( $post_id ) {
 
-        if( appyn_options( 'edcgp_update_post', true ) && ! wp_get_post_parent_id($post_id) ) {
-            $post_id = apply_filters( 'px_process_convert_post_old_version', $post_id );
-        }
-
         $this->post_id = $post_id;
                 
         $this->url_app = trim(get_datos_info('consiguelo', false, $this->post_id));
-
         $this->check_url_app();
-
+        
         $this->check_if_exist_url();
-
+        
         $this->import_process();
+        $post = get_post($post_id);
+        $current_content = $post->post_content;
 
         $my_post = array(
             'ID'       		=> $this->post_id,
             'post_title'    => wp_strip_all_tags( $this->info_app['nombre'] ),
-            'post_content'  => $this->info_app['contenido'],
+            'post_content' => $current_content, // Giữ nguyên nội dung hiện tại
             'post_author'   => get_current_user_id(),
         );
         $my_post['post_status'] = get_post_status($this->post_id);
         
-        if( $this->options['edcgp_create_category'] != 1 && $this->options['edcgp_mc'] != 1 ) {
-            $my_post['post_category'] = array($this->term_id);
-        }
         
-        if( in_array('app_title', $this->dca) )
-            unset($my_post['post_title']);
-    
-        if( in_array('app_content', $this->dca) )
-            unset($my_post['post_content']);
 
-        $cb = get_post_meta( $this->post_id, "custom_boxes", true );
-        $ac = appyn_gpm( $this->post_id, 'appyn_ads_control' );
 
         wp_update_post( $my_post, true );
 
-        update_post_meta( $this->post_id, "custom_boxes", $cb );
-        update_post_meta( $this->post_id, "appyn_ads_control", $ac );
-        
-        if( !is_wp_error($this->post_id) ) {
-            $this->output['post_id'] = $this->post_id;
-            $this->info = __( 'Información actualizada.', 'appyn' )."\n";
-            $this->output['info_text'] = '<i class="fa fa-check"></i> '.sprintf(__( 'Entrada "%s" actualizada.', 'appyn' ), $this->info_app['nombre']);
-        }
-
-        return $this->after_process( 'update' );
-        
-    }
-
-    public function reimportPost( $post_id ) {
-
-        $this->post_id = $post_id;
-                
-        $this->url_app = trim(get_datos_info('consiguelo', false, $this->post_id));
-
-        $this->check_url_app();
-
-        $this->import_process();
-
-        $my_post = array(
-            'ID'       		=> $this->post_id,
-            'post_title'    => wp_strip_all_tags( $this->info_app['nombre'] ),
-            'post_content'  => $this->info_app['contenido'],
-            'post_author'   => get_current_user_id(),
-        );
-        $my_post['post_status'] = get_post_status($this->post_id);
-        
-        if( $this->options['edcgp_create_category'] != 1 && $this->options['edcgp_mc'] != 1 ) {
-            $my_post['post_category'] = array($this->term_id);
-        }
-        
-        if( in_array('app_title', $this->dca) )
-            unset($my_post['post_title']);
-    
-        if( in_array('app_content', $this->dca) )
-            unset($my_post['post_content']);
-
-        $cb = get_post_meta( $this->post_id, "custom_boxes", true );
-        $ac = appyn_gpm( $this->post_id, 'appyn_ads_control' );
-
-        wp_update_post( $my_post, true );
-
-        update_post_meta( $this->post_id, "custom_boxes", $cb );
-        update_post_meta( $this->post_id, "appyn_ads_control", $ac );
         
         if( !is_wp_error($this->post_id) ) {
             $this->output['post_id'] = $this->post_id;
@@ -300,13 +281,11 @@ class EPS {
     private function after_process( $type = 'create' ) {
 
         update_post_meta( $this->post_id, "px_app_id", $this->info_app['app_id'] );
-        
-        if( ($type == 'create' && $this->options['edcgp_create_category'] != 1) || ($type == 'update' && $this->options['edcgp_mc'] != 1) ) {
-            wp_set_post_terms($this->post_id, $this->term_id, 'category');
-        }
+        update_post_meta( $this->post_id, "px_ggplay", true );
+
         
         if( $this->options['edcgp_create_tax_dev'] != 1 ) {
-            $post_datos_informacion = str_replace(',', '', $this->info_app['desarrollador']);
+            $post_datos_informacion = str_replace(',', '', $this->info_app['developer']);
             wp_insert_term( $post_datos_informacion, 'dev' );
             $this->term_id = term_exists( $post_datos_informacion, 'dev' );
             wp_set_post_terms( $this->post_id, $post_datos_informacion, 'dev' );
@@ -349,155 +328,115 @@ class EPS {
             'fecha_actualizacion' 	=> $this->info_app['fecha_actualizacion'],
             'last_update'		 	=> $this->info_app['last_update'],
             'released_on' 	        => $this->info_app['released_on'],
-            'requerimientos' 		=> $this->info_app['requerimientos'],
+            'requirements' 		=> $this->info_app['requirements'],
             'novedades' 			=> $this->info_app['novedades'],
-            'app_status'	 		=> 'updated',
+            // 'app_status'	 		=> 'updated',
             'consiguelo' 			=> $this->url_app,
-            'categoria_app'			=> $this->info_app['categoria_app'],
-            'descargas'			    => $this->info_app['descargas'],
+            'downloads'			    => $this->info_app['downloads'],
             'os'					=> 'ANDROID',
         );
     
-        if( $type == 'update' )
-            if( is_array($this->dca) )
-                if( in_array('app_description', $this->dca) )
-                    $datos_informacion['descripcion'] = get_datos_info('descripcion', false, $this->post_id);
+   
 
-        if( $type == 'update' && ! isset($this->bot_info['apk']) )
-            $datos_informacion['tamano'] = get_datos_info('tamano', false, $this->post_id);
 
-        if( $type == 'create' )
-            $datos_informacion['app_status'] = 'new';
+        // if( $type == 'create' )
+        //     $datos_informacion['app_status'] = 'new';
+        $price_string = $this->bot_info['app_price']; // "$0.24"
+
+        // Loại bỏ ký tự '$'
+        $price_number = floatval(str_replace('$', '', $price_string)); // 0.24
         
-        if( $this->bot_info['is_pay'] )
+        // So sánh với 0
+        if($price_number > 0){
             $datos_informacion['offer']['price'] = 'pago';
+            $datos_informacion['offer']['amount'] = $price_number;
+        }
+        $descargas = get_datos_info('downloads', false, $this->post_id);
 
-        if( $type == 'update' && empty( $this->bot_info['downloads'] ) )
-            $datos_informacion['descargas'] = get_datos_info('descargas', false, $this->post_id);
+        // Remove all '+' characters from the string
+        $descargas = str_replace('+', '', $descargas);
+        
+        // Assign the sanitized value back to the array
+        if( $type == 'update' && empty( $this->bot_info['app_download'] ) )
+            $datos_informacion['downloads'] = $descargas;
         
         update_post_meta($this->post_id, "datos_informacion", $datos_informacion);
-    
-    
+
+        $px_app_id = get_post_meta( $this->post_id, 'px_app_id', true );
+        $datos_download = array(
+            array(
+                'link' => 'https://modgara.com/downloads/ggplay/'.$px_app_id.'.apk',
+                'texto' => 'Download',
+            ),
+        );
+        if($price_number > 0){
+
+        }else{
+
+            // Cập nhật giá trị datos_download vào custom field
+            update_post_meta($this->post_id, 'datos_download', $datos_download);
+        }
+
         if( $type == 'update' ) {
             if( ! in_array('app_video', $this->dca) )
                 update_post_meta($this->post_id, "datos_video", array('id' => $this->info_app['video']));
-                
-            if( ! in_array('app_screenshots', $this->dca) )
-                if( isset($this->info_app['imagenes']) ) 
-                    update_post_meta($this->post_id, "datos_imagenes", $this->info_app['imagenes']);
+
         } else {
             update_post_meta($this->post_id, "datos_video", array('id' => $this->info_app['video']));
-            if( isset($this->info_app['imagenes']) ) 
-                update_post_meta($this->post_id, "datos_imagenes", $this->info_app['imagenes']);
+
+        }
+
+        $app_images_array = json_decode($this->bot_info['app_images'], true);
+        $n = 0;
+
+        foreach($app_images_array as $screenshot) { 
+            if( $n < $this->options['edcgp_extracted_images'] ) {
+                $image_id = px_upload_image_by_url($screenshot, $this->post_id,true);
+     
+                $image_url = wp_get_attachment_url($image_id);
+                if ($image_url) {
+                    $image_urls[] = $image_url;
+                }
+            }
+            $n++;
+        }	
+        if (!empty($image_urls)) {
+            update_post_meta($this->post_id, 'datos_imagenes', $image_urls);
         }
 
         if( get_option( 'appyn_edcgp_rating' ) ) {
             
-            $rating = $this->bot_info['rating'];
+            $rating = $this->bot_info;
         
-            update_post_meta($this->post_id, "new_rating_users", ((isset($rating['users'])) ? $rating['users'] : ''));
-            update_post_meta($this->post_id, "new_rating_count", ((isset($rating['total'])) ? $rating['total'] : ''));
-            update_post_meta($this->post_id, 'new_rating_average', ((isset($rating['average'])) ? $rating['average'] : ''));
-        }
-
-        if( $type == 'update' ) {
-
-            $re = '/(?<=[?&]id=)[^&]+/m';
-            preg_match_all($re, $this->url_app, $matches, PREG_SET_ORDER, 0);
-            $get_app_id = $matches[0][0];
+            $number_str = strtoupper(trim($rating['app_rank_number_of_vote']));
+    
+            // Loại bỏ từ 'REVIEWS' nếu có
+            $number_str = str_replace('REVIEWS', '', $number_str);
+            $number_str = trim($number_str);
             
-            $posts = get_option( 'trans_updated_apps' );
-
-            unset($posts[$get_app_id]);
-
-            update_option( 'trans_updated_apps', $posts );
-            
-            set_transient( 'trans_count_updated_apps', count($posts) );
-            
-            if( !$this->options['edcgp_sapk'] && !in_array('app_download_links', $this->dca) )
-                $this->processAPK();
-
-            if( $this->options['edcgp_eaa'] ) {
-                $datos_download = get_datos_download( $this->post_id );
-
-                foreach( $datos_download['links_options'] as $lo ) {
-
-                    if( !isset($lo['link']) ) continue;
-
-                    $attach_id = attachment_url_to_postid( $lo['link'] );
-                    if( ! $attach_id ) {
-                        $pi = pathinfo($lo['link']);
-                        $i = 0;
-                        do {
-                            $i++;
-                            $file = $pi['dirname'].'/'.$pi['filename'].'-part'.$i.'.'.$pi['extension'];
-                            $attach_id = attachment_url_to_postid( $file );
-
-                            if( ! $attach_id ) continue;
-
-                            $fif = str_replace( $pi['filename'].'-part'.$i.'.'.$pi['extension'], $pi['filename'].'.'.$pi['extension'], get_attached_file($attach_id));
-
-                            if( file_exists($fif) ) {
-                                unlink( $fif );
-                            }
-                            wp_delete_attachment($attach_id, true);
-                        } while( $i < 5 );
-                        continue;
-                    } else {
-                        wp_delete_attachment($attach_id, true);
-                    }
-                }
+            // Kiểm tra và chuyển đổi dựa trên ký hiệu
+            if (strpos($number_str, 'K') !== false) {
+                $ranking = (int)(floatval(str_replace('K', '', $number_str)) * 1000);
+            } elseif (strpos($number_str, 'M') !== false) {
+                $ranking = (int)(floatval(str_replace('M', '', $number_str)) * 1000000);
+            } elseif (strpos($number_str, 'B') !== false) {
+                $ranking = (int)(floatval(str_replace('B', '', $number_str)) * 1000000000);
+            } else {
+                // Nếu không có ký hiệu, chỉ chuyển đổi thành số nguyên
+                $ranking = is_numeric($number_str) ? (int)$number_str : 0;
             }
-        } elseif( $type == 'create' ) {
 
-            if( !$this->options['edcgp_sapk'] )
-                $this->processAPK();
-
+            update_post_meta($this->post_id, "new_rating_users", $ranking);
+            update_post_meta($this->post_id, "new_rating_count", ((isset($rating['app_rank_number_of_vote'])) ? $rating['app_rank_number_of_vote'] : ''));
+            update_post_meta($this->post_id, 'new_rating_average', ((isset($rating['app_rank'])) ? $rating['app_rank'] : ''));
         }
+
 
         $this->output['response'] = $this->info;
 
         return json_encode($this->output);
     }
 
-    private function processAPK() {
-
-        if( $this->bot_info['apk'] ) {
-        
-            $re = '/(?<=[?&]id=)[^&]+/m';
-            $str = $this->url_app;
-            preg_match_all($re, $str, $matches, PREG_SET_ORDER, 0);
-            $idps = $matches[0][0];
-    
-            $this->output['apk_info'] = array(
-                'post_id' => $this->post_id,
-                'idps' 	  => $idps,
-                'date' 	  => $this->bot_info['last_update'],
-                'total_size' 	  => ( isset($this->bot_info['total_size']) ) ? $this->bot_info['total_size'] : '',
-                'uid' => uniqid(),
-            );
-    
-            $this->output['apk_info']['url'] = $this->bot_info['apk'];
-    
-            $size = ( isset($this->bot_info['total_size']) ) ? px_btoc( $this->bot_info['total_size'] ) : '';
-    
-            $tsr = px_option_selected_upload(); 
-    
-            if( px_check_apk_obb($this->bot_info['apk']) ) {
-                $this->output['apk_info']['text']['step1'] = '<i class="fa fa-file" aria-hidden="true"></i> '. __( 'Se encontró un archivo APK y OBB', 'appyn' );
-                $this->output['apk_info']['text']['step2'] = '<i class="fa fa-download" aria-hidden="true"></i> '. __( 'Descargando archivo...', 'appyn' ).' '.$size.' (<span class="percentage" style="display:inline-block;">'. __( 'En proceso...', 'appyn' ).'</span>)';
-                $this->output['apk_info']['text']['step3'] = '<i class="fa fa-spinner" aria-hidden="true"></i> '. sprintf( __( 'Subiendo a %s en ZIP', 'appyn' ), $tsr);
-                
-            } else {
-                $this->output['apk_info']['text']['step1'] = '<i class="fa fa-file" aria-hidden="true"></i> '. __( 'Se encontró un archivo APK', 'appyn' );
-                if( array_key_exists('zip', $this->bot_info['apk']) ) {
-                    $this->output['apk_info']['text']['step1'] = '<i class="fa fa-file" aria-hidden="true"></i> '. __( 'Se encontró un archivo ZIP', 'appyn' );
-                }
-                $this->output['apk_info']['text']['step2'] = '<i class="fa fa-download" aria-hidden="true"></i> '. __( 'Descargando archivo...', 'appyn' ).' '.$size.' (<span class="percentage" style="display:inline-block;">'. __( 'En proceso...', 'appyn' ).'</span>)';
-                $this->output['apk_info']['text']['step3'] = '<i class="fa fa-spinner" aria-hidden="true"></i> '. sprintf( __( 'Subiendo a %s', 'appyn' ), $tsr);
-            }
-        }
-    }
 
     private function checkExists() {
         global $wpdb;
@@ -505,11 +444,335 @@ class EPS {
             $results = $wpdb->get_results("SELECT SQL_CALC_FOUND_ROWS  {$wpdb->prefix}posts.ID FROM {$wpdb->prefix}posts  INNER JOIN {$wpdb->prefix}postmeta ON ( {$wpdb->prefix}posts.ID = {$wpdb->prefix}postmeta.post_id ) WHERE 1=1  AND (( {$wpdb->prefix}postmeta.meta_key = 'datos_informacion' AND {$wpdb->prefix}postmeta.meta_value LIKE '%:\"{$this->url_app}\";%' )) AND {$wpdb->prefix}posts.post_type = 'post' AND (({$wpdb->prefix}posts.post_status = 'publish' OR {$wpdb->prefix}posts.post_status = 'future' OR {$wpdb->prefix}posts.post_status = 'draft')) GROUP BY {$wpdb->prefix}posts.ID ORDER BY {$wpdb->posts}.post_date DESC LIMIT 0, 10");
             
             if( count($results) != 0 )  {
-                $output['response'] = sprintf(__( 'Error: La aplicación que desea importar ya existe. %s', 'appyn' ), '<a href="'.get_edit_post_link($results[0]->ID).'" target="_blank">'.__( 'Ver entrada', 'appyn' ).'</a>');
+                $output['response'] = sprintf(__( 'Lỗi: Ứng dụng bạn muốn nhập đã tồn tại. %s', 'appyn' ), '<a href="'.get_edit_post_link($results[0]->ID).'" target="_blank">'.__( 'See entry', 'appyn' ).'</a>');
+                echo json_encode($output);
+                exit;
+            }
+        }
+    }
+    private $allowed_domains = [
+        'gamejolt.com',
+        'malavida.com',
+        'softonic.com',
+        'mcead.com',
+        'apkpure.com',
+        'apkcombo.com',
+        'uptodown.com'
+    ];
+    private function check_url_app_apk() {
+        if ( empty( $this->url_app ) ) {
+            $output = array();
+            $output['response'] = __( 'Lỗi: URL không được để trống. Dừng thực thi.', 'appyn' );        
+            $output['error_field'] = 'consiguelo';
+            die(json_encode($output));
+        }
+
+        $contains_allowed_domain = false;
+
+        foreach ( $this->allowed_domains as $domain ) {
+            if ( strpos( $this->url_app, $domain ) !== false ) {
+                $contains_allowed_domain = true;
+                break; // Tìm thấy ít nhất một tên miền được phép, dừng vòng lặp
+            }
+        }
+
+        if ( ! $contains_allowed_domain ) {
+            $output = array();
+            $output['response'] = __( 'Lỗi: URL không chứa bất kỳ tên miền được phép nào. Dừng thực thi.', 'appyn' );        
+            $output['error_field'] = 'consiguelo';
+            die(json_encode($output));
+        }
+
+    }
+    
+    private function check_if_exist_url_apk() {
+
+        if( ! get_http_response_code( $this->url_app ) ) {
+            $output = array();
+            $output['response'] = __( 'Lỗi: Có vẻ như URL không tồn tại. Vui lòng kiểm tra lại.', 'appyn' );
+            $output['error_field'] = 'consiguelo';
+            die(json_encode($output));
+        }
+    }
+
+    private function checkExistsApk() {
+        global $wpdb;
+        if( appyn_options('edcgp_appd') != 1 ) {
+            $results = $wpdb->get_results("SELECT SQL_CALC_FOUND_ROWS  {$wpdb->prefix}posts.ID FROM {$wpdb->prefix}posts  INNER JOIN {$wpdb->prefix}postmeta ON ( {$wpdb->prefix}posts.ID = {$wpdb->prefix}postmeta.post_id ) WHERE 1=1  AND (( {$wpdb->prefix}postmeta.meta_key = 'datos_informacion' AND {$wpdb->prefix}postmeta.meta_value LIKE '%:\"{$this->url_app}\";%' )) AND {$wpdb->prefix}posts.post_type = 'post' AND (({$wpdb->prefix}posts.post_status = 'publish' OR {$wpdb->prefix}posts.post_status = 'future' OR {$wpdb->prefix}posts.post_status = 'draft')) GROUP BY {$wpdb->prefix}posts.ID ORDER BY {$wpdb->posts}.post_date DESC LIMIT 0, 10");
+            
+            if( count($results) != 0 )  {
+                $output['response'] = sprintf(__( 'Lỗi: Ứng dụng bạn muốn nhập đã tồn tại. %s', 'appyn' ), '<a href="'.get_edit_post_link($results[0]->ID).'" target="_blank">'.__( 'See entry', 'appyn' ).'</a>');
                 echo json_encode($output);
                 exit;
             }
         }
     }
 
+    private function getDataApk($get_apk = true) {
+        
+        $this->options['edcgp_sapk'] = appyn_options( 'edcgp_sapk', true );
+        
+        $output = array();
+
+
+        $proxy_api_url = 'https://modgara.com/app2/add-data?url=' . $this->url_app;
+        $proxy_response = wp_remote_get( $proxy_api_url, array(
+            'method'      => 'GET',
+            'timeout' => 60,
+        ) );
+        
+        $proxy_api_url_apk = 'https://modgara.com/app2/scrape-download-links?url=' . $this->url_app;
+        $proxy_response = wp_remote_get( $proxy_api_url_apk, array(
+            'method'      => 'GET',
+            'timeout'     => 180, // Increase timeout from 60 to 120 seconds or more
+            ) );
+
+        $url = 'https://modgara.com/app2/get-data?url=' . $this->url_app;
+
+        $response = wp_remote_get( $url, array(
+            'method'      => 'GET',
+            'timeout' => 60,
+        ) );
+        
+        
+        if ( ! is_wp_error( $response ) ) {
+            $bot = json_decode($response['body'], true);
+            $this->bot_info = $bot;
+            return $bot;
+        } else {
+            $output['response'] = $response->get_error_message();
+            die( json_encode($output) );
+            return $bot;
+        }
+        
+        
+    }
+
+    private function import_process_apk() {
+   
+
+        $bot = $this->getDataApk();
+     
+
+        $this->bot_info = $bot;
+        $parts = preg_split('/[.\n]/', $this->bot_info['app_description'], 2);
+
+
+        $this->info_app = array();
+        $this->info_app['nombre']                = $this->bot_info['app_title'];            // Tên ứng dụng
+        $this->info_app['contenido']             = $this->bot_info['app_description'];       // Nội dung ứng dụng
+        $this->info_app['descripcion']           = $this->bot_info['app_description'];       // Mô tả ứng dụng
+        $this->info_app['fecha_actualizacion']    = $this->bot_info['app_updated_on'];      // Ngày cập nhật
+        $this->info_app['released_on']           = $this->bot_info['app_released_on'];     // Ngày phát hành
+        $this->info_app['last_update']           = $this->bot_info['app_updated_on'];      // Lần cập nhật cuối
+        $this->info_app['version']               = $this->bot_info['app_version'];         // Phiên bản ứng dụng
+        $this->info_app['requirements']        = $this->bot_info['app_requires_android'];// Yêu cầu Android
+        $this->info_app['novedades']             = $this->bot_info['app_what_news'];       // Những cập nhật mới
+        $this->info_app['imagecover']            = $this->bot_info['app_image'];           // Hình ảnh chính (cover)
+        $this->info_app['video']                 = $this->bot_info['app_video'];                                     // Không có thông tin video trong dữ liệu cung cấp
+        $this->info_app['tamano']                =$this->bot_info['app_size'];;                                     // Kích thước không được cung cấp
+        $this->info_app['categoria']             = 'Games';                                // Ví dụ: thể loại "Games"
+       
+        $this->info_app['developer']             = $this->bot_info['app_dev'];             // Nhà phát triển
+        $this->info_app['pago']                  = '';                                     // Thông tin trả phí không có trong dữ liệu
+        $this->info_app['downloads']             = $this->bot_info['app_download'];                                     // Không có thông tin lượt tải
+        $this->info_app['app_id']                = $this->bot_info['url'];    
+        $this->options = array();
+        $this->options['edcgp_post_status']     = appyn_options( 'edcgp_post_status' );
+        $this->options['edcgp_create_category'] = appyn_options( 'edcgp_create_category' );
+        $this->options['edcgp_create_tax_dev'] 	= appyn_options( 'edcgp_create_tax_dev' );
+        $this->options['edcgp_extracted_images']= appyn_options( 'edcgp_extracted_images' );
+        $this->options['edcgp_sapk']			= appyn_options( 'edcgp_sapk' );
+        $this->options['edcgp_mc']              = appyn_options( 'edcgp_mc' );
+        $this->options['edcgp_eaa']             = appyn_options( 'edcgp_eaa' );
+
+    }
+    private function after_process_apk( $type = 'create' ) {
+
+        update_post_meta( $this->post_id, "px_app_id", $this->info_app['app_id'] );
+        update_post_meta( $this->post_id, "px_ggplay", false );
+
+        
+        if( $this->options['edcgp_create_tax_dev'] != 1 ) {
+            $post_datos_informacion = str_replace(',', '', $this->info_app['developer']);
+            wp_insert_term( $post_datos_informacion, 'dev' );
+            $this->term_id = term_exists( $post_datos_informacion, 'dev' );
+            wp_set_post_terms( $this->post_id, $post_datos_informacion, 'dev' );
+        }
+        
+        if( $type == 'update' )
+            if( ! in_array('app_ico', $this->dca) ) {
+                $eidcgp = appyn_options( 'eidcgp_update_post' );
+                if( $eidcgp == 1 ) {
+                    $attachment_id = get_post_thumbnail_id( $this->post_id );
+                    if( $attachment_id ) {
+                        $attachment_id = get_post_thumbnail_id( $this->post_id );
+                        wp_delete_attachment( $attachment_id, true );
+                        delete_post_thumbnail( $this->post_id );
+                    }
+                }
+                        
+                if( $eidcgp == 1 ) {
+                    global $post;
+                    $ppt = new WP_Query( array('post_parent' => $this->post_id) );
+                    if( $ppt->have_posts() ) {
+                        while( $ppt->have_posts() ) { $ppt->the_post();
+                            $attachment_id = get_post_thumbnail_id( $post->ID );
+                            wp_delete_attachment( $attachment_id, true );
+                            delete_post_thumbnail( $post->ID );
+                            set_post_thumbnail( $post->ID, $attachment_id );
+                        }
+                    }
+                }
+                $attach_id = px_upload_image( $this->info_app, $this->post_id );
+            }
+        
+        if( $type == 'create' )
+            $attach_id = px_upload_image( $this->info_app, $this->post_id );
+
+        $datos_informacion = array(
+            'descripcion' 			=> $this->info_app['descripcion'],
+            'version' 				=> $this->info_app['version'],
+            'tamano' 				=> $this->info_app['tamano'],
+            'fecha_actualizacion' 	=> $this->info_app['fecha_actualizacion'],
+            'last_update'		 	=> $this->info_app['last_update'],
+            'released_on' 	        => $this->info_app['released_on'],
+            'requirements' 		=> $this->info_app['requirements'],
+            'novedades' 			=> $this->info_app['novedades'],
+            // 'app_status'	 		=> 'updated',
+            'consiguelo' 			=> $this->url_app,
+            'downloads'			    => $this->info_app['downloads'],
+            'os'					=> 'ANDROID',
+        );
+    
+
+
+
+        // if( $type == 'create' )
+        //     $datos_informacion['app_status'] = 'new';
+        $price_string = $this->bot_info['app_price']; // "$0.24"
+
+        // Loại bỏ ký tự '$'
+        $price_number = floatval(str_replace('$', '', $price_string)); // 0.24
+        
+        // So sánh với 0
+        if($price_number > 0){
+            $datos_informacion['offer']['price'] = 'pago';
+            $datos_informacion['offer']['amount'] = $price_number;
+        }
+        $descargas = get_datos_info('downloads', false, $this->post_id);
+
+        // Remove all '+' characters from the string
+        $descargas = str_replace('+', '', $descargas);
+        
+        // Assign the sanitized value back to the array
+        if( $type == 'update' && empty( $this->bot_info['app_download'] ) )
+            $datos_informacion['downloads'] = $descargas;
+        
+        update_post_meta($this->post_id, "datos_informacion", $datos_informacion);
+
+        $px_app_id = get_post_meta( $this->post_id, 'px_app_id', true );
+        $datos_download = array(
+            array(
+                'link' => 'https://modgara.com/app2/downloads?url='.$px_app_id,
+                'texto' => 'Download',
+            ),
+        );
+        update_post_meta($this->post_id, 'datos_download', $datos_download);
+
+
+        if( $type == 'update' ) {
+            if( ! in_array('app_video', $this->dca) )
+                update_post_meta($this->post_id, "datos_video", array('id' => $this->info_app['video']));
+
+        } else {
+            update_post_meta($this->post_id, "datos_video", array('id' => $this->info_app['video']));
+
+        }
+        $app_images_array = json_decode($this->bot_info['app_images'], true);
+        $n = 0;
+
+        foreach($app_images_array as $screenshot) { 
+            if( $n < $this->options['edcgp_extracted_images'] ) {
+                $image_id = px_upload_image_by_url($screenshot, $this->post_id,true);
+     
+                $image_url = wp_get_attachment_url($image_id);
+                if ($image_url) {
+                    $image_urls[] = $image_url;
+                }
+            }
+            $n++;
+        }	
+        if (!empty($image_urls)) {
+            update_post_meta($this->post_id, 'datos_imagenes', $image_urls);
+        }
+
+
+        if( get_option( 'appyn_edcgp_rating' ) ) {
+            
+            $rating = $this->bot_info;
+        
+            $number_str = strtoupper(trim($rating['app_rank_number_of_vote']));
+    
+            // Loại bỏ từ 'REVIEWS' nếu có
+            $number_str = str_replace('REVIEWS', '', $number_str);
+            $number_str = trim($number_str);
+            
+            // Kiểm tra và chuyển đổi dựa trên ký hiệu
+            if (strpos($number_str, 'K') !== false) {
+                $ranking = (int)(floatval(str_replace('K', '', $number_str)) * 1000);
+            } elseif (strpos($number_str, 'M') !== false) {
+                $ranking = (int)(floatval(str_replace('M', '', $number_str)) * 1000000);
+            } elseif (strpos($number_str, 'B') !== false) {
+                $ranking = (int)(floatval(str_replace('B', '', $number_str)) * 1000000000);
+            } else {
+                // Nếu không có ký hiệu, chỉ chuyển đổi thành số nguyên
+                $ranking = is_numeric($number_str) ? (int)$number_str : 0;
+            }
+
+            update_post_meta($this->post_id, "new_rating_users", $ranking);
+            update_post_meta($this->post_id, "new_rating_count", ((isset($rating['app_rank_number_of_vote'])) ? $rating['app_rank_number_of_vote'] : ''));
+            update_post_meta($this->post_id, 'new_rating_average', ((isset($rating['app_rank'])) ? $rating['app_rank'] : ''));
+        }
+
+
+        $this->output['response'] = $this->info;
+
+        return json_encode($this->output);
+    }
+    public function createPostApk( $url_app ) {
+        
+        $this->url_app = trim($url_app);
+
+        $this->check_url_app_apk();
+        
+        $this->check_if_exist_url_apk();
+
+        $this->checkExistsApk();
+
+        $this->import_process_apk();
+                
+        $my_post = array(
+            'post_title'    => wp_strip_all_tags( $this->info_app['nombre'] ),
+            'post_content'  => "",
+            'post_author'   => get_current_user_id(),
+        );
+
+        if( $this->options['edcgp_post_status'] == 1 ) {
+            $my_post['post_status'] = 'publish';
+        } else {
+            $my_post['post_status'] = 'draft';
+        }
+
+
+        $this->post_id = wp_insert_post( $my_post );
+
+        if( $this->post_id ) {
+            $this->output['post_id'] = $this->post_id;
+            $this->info = __( 'Información importada.', 'appyn' )."\n";
+            $this->output['info_text'] = '<i class="fa fa-check"></i> '.sprintf(__( 'Entry "%s" created.', 'appyn' ), $this->info_app['nombre']).' <a href="'.get_edit_post_link($this->post_id).'" target="_blank">'.__( 'See post', 'appyn' ).'</a>';
+        }
+        
+        return $this->after_process_apk( 'create' );
+    }
 }

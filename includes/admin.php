@@ -7,9 +7,9 @@ include_once __DIR__.'/../admin/panel.php';
 add_action( 'admin_enqueue_scripts', 'load_custom_wp_admin_style' );
 
 function load_custom_wp_admin_style() {
-	wp_enqueue_style( 'style-admin', get_bloginfo("template_directory").'/admin/assets/css/style.css', false, VERSIONPX, 'all' ); 
+	wp_enqueue_style( 'style-admin', get_stylesheet_directory_uri().'/admin/assets/css/style.css', false, VERSIONPX, 'all' ); 
 
-	wp_enqueue_style( 'style-font-awesome', get_template_directory_uri().'/assets/css/font-awesome-6.4.2.min.css', false, VERSIONPX, 'all' ); 
+	wp_enqueue_style( 'style-font-awesome', get_stylesheet_directory_uri().'/assets/css/font-awesome-6.4.2.min.css', false, VERSIONPX, 'all' ); 
 
 	wp_enqueue_style( 'wp-color-picker' );
 
@@ -27,13 +27,13 @@ function load_custom_wp_admin_scripts() {
 
 	wp_enqueue_script( 'my-upload' );
 
-	wp_register_script( 'custom-upload', get_bloginfo('template_url').'/admin/assets/js/upload.js',array('jquery','media-upload','thickbox') );
+	wp_register_script( 'custom-upload', get_stylesheet_directory_uri().'/admin/assets/js/upload.js',array('jquery','media-upload','thickbox') );
 
 	wp_enqueue_script( 'custom-upload' );
 
-	wp_enqueue_script( 'colorpicker-custom', get_bloginfo("template_directory").'/admin/assets/js/colorpicker.js', array( 'wp-color-picker' ), false, true );
+	wp_enqueue_script( 'colorpicker-custom', get_stylesheet_directory_uri().'/admin/assets/js/colorpicker.js', array( 'wp-color-picker' ), false, true );
 	
-	wp_enqueue_script( 'admin-js', get_bloginfo("template_directory").'/admin/assets/js/js.js', false, VERSIONPX, true ); 
+	wp_enqueue_script( 'admin-js', get_stylesheet_directory_uri().'/admin/assets/js/js.js', false, VERSIONPX, true ); 
     wp_localize_script( 'admin-js', 'ajax_var', array(
         'url'    => admin_url( 'admin-ajax.php' ),
         'nonce'  => wp_create_nonce( 'admin_panel_nonce' ),
@@ -45,13 +45,13 @@ function load_custom_wp_admin_scripts() {
 	$pp = isset($post->post_parent) ? $post->post_parent : null;
 	$am = '';
 	if( $pp != 0 ) {
-		$am = "\n".__( 'Importante: Este post es una versión antigua', 'appyn' );
+		$am = "\n".__( 'Importante: Este post es una version antigua', 'appyn' );
 	}
 	wp_localize_script( 'admin-js', 'vars', array(
 		'_img' => __( 'Imagen', 'appyn' ),
 		'_title' => __( 'Título', 'appyn' ),
-		'_version' => __( 'Versión', 'appyn' ),
-		'_import_text' => __( 'Importar datos', 'appyn' ),
+		'_version' => __( 'Version', 'appyn' ),
+		'_import_text' => __( 'import app', 'appyn' ),
 		'_confirm_update_text' => __( '¿Quiere actualizar la información de esta aplicación? Recuerda que reemplazará toda la información.', 'appyn' ).$am,
     ) );
     wp_localize_script( 'admin-js', 'importgp_nonce', array(
@@ -62,32 +62,7 @@ function load_custom_wp_admin_scripts() {
     ) );
 }
 
-add_action( 'admin_notices', 'admin_notice_update' );
 
-function admin_notice_update() {
-	$url = 'https://themespixel.net/api.php?theme='.THEMEPX;
-	$data = get_remote_html( $url );
-	$result = json_decode($data, TRUE);
-	if( $result && str_replace('.', '', VERSIONPX) < str_replace('.', '', $result['version']) ) {
-    ?><?php add_thickbox(); ?>
-		<?php $user_locale = strstr(get_user_locale(), '_', true); ?>
-    <div class="notice notice-success inline" style="margin-left:2px;">
-		<p><?php echo sprintf(__( 'Está disponible una nueva versión del theme %s', 'appyn' ), ucfirst(THEMEPX)); ?> . <a href="https://themespixel.net/changelog.php?theme=<?php echo THEMEPX; ?>&lang=<?php echo $user_locale; ?>&TB_iframe=true&width=550&height=450" class="thickbox"><?php echo sprintf(__( 'Revisa los detalles de la versión %s', 'appyn' ), $result['version']); ?></a>. <a href="https://themespixel.net/login/" target="_blank"><?php echo __( 'Descárgala ahora', 'appyn' ); ?></a>.</p>
-    </div>
-    <?php
-	}
-}
-
-add_action( 'admin_notices', 'admin_notice_apikey' );
-
-function admin_notice_apikey() {
-
-	if( ! appyn_options( 'apikey' ) ) {
-		echo '<div class="error inline" style="margin-left:2px;">
-			<p>'.sprintf( __( 'Debe colocar una %s para hacer uso del %s, ver la lista de %s y el área de %s.', 'appyn' ), '<a href="'.admin_url('admin.php?page=appyn_panel#edcgp').'">API Key</a>', '<a href="'.admin_url('admin.php?page=appyn_content_import_gp').'">'.__( 'Importador de contenido', 'appyn' ).'</a>', '<a href="'.admin_url('admin.php?page=appyn_updated_apps').'">'.__( 'Apps por actualizar', 'appyn' ).'</a>', '<a href="'.admin_url('admin.php?page=appyn_mod_apps').'">'.__( 'Apps modificadas', 'appyn' ).'</a>' ) .'</p>
-		</div>';
-	}
-}
 
 add_filter( 'px_process_convert_post_old_version', 'px_process_convert_post_old_version_callback', 10, 2 );
 
@@ -190,44 +165,19 @@ function px_convert_post_old_version(){
 	apply_filters( 'px_process_convert_post_old_version', $post_id, 'redirect' );
 }
 
-add_filter( 'page_row_actions', 'px_duplicate_post_link', 10, 2 );
-
-function px_duplicate_post_link( $actions, $post ) {
-	if( current_user_can('edit_posts') && $post->post_parent == 0 && $post->post_status == "publish" && $post->post_type == "post" ) {
-
-		$actions['duplicate'] = '<a href="' . wp_nonce_url('admin.php?action=px_convert_post_old_version&post=' . $post->ID, basename(__FILE__), 'duplicate_nonce' ) . '" title="'.__( 'Convertir en versión anterior', 'appyn' ).'" rel="permalink">'.__( 'Convertir en versión anterior', 'appyn' ).'</a>';
-	}
-	return $actions;
-}
 
 add_action( 'admin_bar_menu', 'toolbar_admin_px', 999 );
 
 function toolbar_admin_px( $wp_admin_bar ) {
 	$post_id = ( isset($_GET['post']) ) ? $_GET['post'] : NULL;
 
-	$args = array(
-		'id'    => 'menu_reports',
-		'title' => '<span class="ab-icon"></span><span class="ab-label">'.count_reports().'</span>',
-		'href'  => admin_url().'admin.php?page=appyn_reports',
-		'meta'  => array( 'class' => 'tbap-report', 'title' => __( 'Reportes', 'appyn' )),
-		'parent' => false, 
-	);
-	$wp_admin_bar->add_node( $args );
 
 	$results = get_option( 'posts_download_links_status_404', array() );
 
-	$args = array(
-		'id'    => 'check_download_links',
-		'title' => '<span class="ab-icon"></span><span class="ab-label">'.count($results).'</span>',
-		'href'  => admin_url().'edit.php?post_type=post&type=check_download_links',
-		'meta'  => array( 'class' => 'tbap-cdl', 'title' => __( 'Enlaces de descarga rotos', 'appyn' ) ),
-		'parent' => false, 
-	);
-	$wp_admin_bar->add_node( $args );
 
 	$args = array(
 		'id'    => 'appyn_content_import_gp',
-		'title' => '<span class="ab-icon"></span><span class="ab-label">'.__( 'Importar contenido (Google Play)', 'appyn' ).' </span>',
+		'title' => '<span class="ab-icon"></span><span class="ab-label">'.__( 'Import app (Google Play) ', 'appyn' ).' </span>',
 		'href'  => admin_url().'admin.php?page=appyn_content_import_gp',
 		'meta'  => array( 'class' => 'tbap-ipcgp'),
 		'parent' => false, 
@@ -236,46 +186,33 @@ function toolbar_admin_px( $wp_admin_bar ) {
 
 	$args = array(
 		'id'    => 'appyn_mod_apps',
-		'title' => '<span class="ab-icon"></span><span class="ab-label">'.__( 'Apps modificadas', 'appyn' ).' </span>',
-		'href'  => admin_url().'admin.php?page=appyn_mod_apps',
+		'title' => '<span class="ab-icon"></span><span class="ab-label">'.__( 'Apps list', 'appyn' ).' </span>',
+		'href'  => admin_url().'edit.php?post_type=post',
 		'meta'  => array( 'class' => 'tbap-ipcmda'),
 		'parent' => false, 
 	);
 	$wp_admin_bar->add_node( $args );
+	if (is_admin() && isset($_GET['post'])) {
+        // Lấy ID bài viết hiện tại
+        $post_id = intval($_GET['post']);
 
-	if( $post_id ) {
-		if( get_post_type($post_id) == "post" ) {
+        // Kiểm tra meta option 'px_ggplay' của bài viết
+        $px_ggplay_value = get_post_meta($post_id, 'px_ggplay', true);
+        
+        // Chỉ hiển thị nút nếu giá trị 'px_ggplay' là true
+        if ($px_ggplay_value && $post_id) {
+            // Tạo nút "Update Post" chỉ khi đang ở trong bài viết và có điều kiện 'px_ggplay'
 			$args = array(
-				'id'    => 'appyn_actualizar_informacion',
-				'title' => '<span class="ab-icon"></span><span class="ab-label">'.__( 'Actualizar información', 'appyn' ).'</span>',
-				'href'  => 'javascript:void(0)',
-				'meta'  => array( 
-					'class' => 'tbap-update', 
-				),
-				'parent' => false, 
+				'id'    => 'sync_post_data_action',
+				'title' => '<span class="ab-icon dashicons dashicons-image-rotate"></span><span class="ab-label">'.__( 'Sync Post Data', 'appyn' ).' </span>',
+				'href'  => admin_url('admin-post.php?action=update_post_action&post_id=' . $post_id),  // Lấy post_id hiện tại
+				'meta'  => array('class' => 'tbap-ipcgp'),
+				'parent' => false,
 			);
-			$wp_admin_bar->add_node( $args );	
-		}
+            $wp_admin_bar->add_node($args);
+        }
+    }
 
-		if( wp_get_post_parent_id($post_id) ) {
-			$args = array(
-				'id'    => 'appyn_view_post_parent',
-				'title' => '<span class="ab-label">'.__( 'Ver post padre', 'appyn' ).'</span>',
-				'href'  => get_edit_post_link( wp_get_post_parent_id($post_id) ),
-				'parent' => false, 
-			);
-			$wp_admin_bar->add_node( $args );	
-		}
-	}
-
-	$args = array(
-		'id'    => 'appyn_updated_apps',
-		'title' => '<span class="ab-icon"></span><span class="ab-label">'.__( 'Apps por actualizar', 'appyn' ).' <span>('. px_count_update_apps() .')</span></span>',
-		'href'  => admin_url().'admin.php?page=appyn_updated_apps',
-		'meta'  => array( 'class' => 'tbap-ipaua'),
-		'parent' => false, 
-	);
-	$wp_admin_bar->add_node( $args );
 }
 
 add_action( 'admin_head', 'css_admin_bar' );
@@ -375,30 +312,6 @@ function px_admin_menu_edit_u() {
 	$submenu['edit.php'][5][2] = add_query_arg( 'post_type', 'post', $submenu['edit.php'][5][2] );
 }
 
-add_action( 'admin_footer', function() {
-	$screen = get_current_screen();
-    if( $screen->parent_base == 'edit' && isset($_GET['post']) ) { 
-		global $post;
-		$c = __( 'Convertir a versión anterior', 'appyn' );
-		if( $post->post_parent == 0 ) { ?>
-        <script>
-			(function($) {
-				if( $('.page-title-action').length ) { 
-					$('.page-title-action').after('<a href="<?php echo wp_nonce_url('admin.php?action=px_convert_post_old_version&post=' . $post->ID, basename(__FILE__), 'duplicate_nonce' ); ?>" class="page-title-action" title="<?php echo $c; ?>"><?php echo $c; ?></a>');
-				}	
-				setTimeout(() => {
-					if( $('.edit-post-header__settings').length ) { 
-						$('.edit-post-header__settings').prepend('<a href="<?php echo wp_nonce_url('admin.php?action=px_convert_post_old_version&post=' . $post->ID, basename(__FILE__), 'duplicate_nonce' ); ?>" class="components-button is-tertiary cava" title="<?php echo $c; ?>"><?php echo $c; ?></a>');
-					}	
-				}, 1000);
-
-				
-			})(jQuery);
-		</script>
-<?php
-		}
-    }
-});
 
 add_action( 'admin_init', 'admin_init_url_action' );
 

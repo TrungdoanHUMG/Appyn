@@ -50,7 +50,6 @@ class List_Table_ModApps extends WP_List_Table {
 					'Expect' 		=> '',
 				),
 				'body' => array( 
-					'apikey' 	=> appyn_options( 'apikey', true ), 
 					'website'	=> get_site_url(),
 				),
 			) );
@@ -206,7 +205,7 @@ class List_Table_ModApps extends WP_List_Table {
         );
     }
 	public function no_items() {
-		echo ( $this->response ) ? $this->response : __( 'No hay apps modificadas', 'appyn' );
+		echo ( $this->response ) ? $this->response : __( 'No hay mod apps', 'appyn' );
 	}
 
 	public function column_default( $item, $column_name ) {
@@ -237,7 +236,7 @@ class List_Table_ModApps extends WP_List_Table {
 		$columns = [
             'cb' => '<input type="checkbox" />',
 			'post_title' => __( 'App', 'appyn' ).( ( isset($this->response_body['id']) ) ? '<input type="hidden" id="result_id" value="'.$this->response_body['id'].'">' : ''),
-			'version' => __( 'Versión', 'appyn' ),
+			'version' => __( 'Version', 'appyn' ),
 			'import' => '',
 		];
 
@@ -284,7 +283,7 @@ class List_Table_ModApps extends WP_List_Table {
 
 		echo '<ul class="subsubsub">';
 			if( $this->is_search ) {
-				echo '<li class="all"><a href="'.remove_query_arg( array('status', 's') ).'">'.__( 'Últimas apps modificadas', 'appyn' ).' <span class="count">('.$tpl.')</span></a></li> ';
+				echo '<li class="all"><a href="'.remove_query_arg( array('status', 's') ).'">'.__( 'Últimas mod apps', 'appyn' ).' <span class="count">('.$tpl.')</span></a></li> ';
 			}
 		echo '<li class="all"><a href="'.remove_query_arg( 'status' ).'"'.( ( ! $this->status ) ? ' class="current"' : '').'>'.__( 'Todos', 'appyn' ).' <span class="count">('.$total_items.')</span></a></li>
 			<li class="all"><a href="'.add_query_arg( 'status', 'imported' ).'" '.( ( $this->status == 'imported' ) ? ' class="current"' : '').'>'.__( 'Importados', 'appyn' ).' <span class="count">('.$tpi.')</span></a></li>

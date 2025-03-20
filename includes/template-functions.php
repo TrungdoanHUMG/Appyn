@@ -44,7 +44,56 @@ function show_rating($calificar = 1){
 			<?php } ?><span class="stars" style="width:<?php echo $count_rating['average'] * 10 * 2; ?>%"></span></span> 
 			<?php
 			if($calificar == 1){ ?><span class="rating-average"><b><?php echo $count_rating['average']; ?></b>/5</span>
-				<span class="rating-text"><?php echo __( 'Votos', 'appyn' ).': <span>'.(($count_rating['users']) ? number_format($count_rating['users'], 0, ',', ',') : 0).'</span>'; ?></span>
+			<span class="rating-text">
+				<?php
+				// Kiểm tra xem số lượng người dùng đã vote có tồn tại không
+				$users_vote = ($count_rating['users']) ? $count_rating['users'] : 0;
+
+				// Chuyển đổi số thành dạng K hoặc M
+				function countZeros($number) {
+					$zeros = 0;
+					while ($number >= 10) {
+						$number /= 10;
+						$zeros++;
+					}
+					return $zeros;
+				}
+				
+				if ($users_vote >= 1000000) {
+					$value = $users_vote / 1000000;
+					$suffix = 'M'; // Triệu
+				} elseif ($users_vote >= 1000) {
+					$value = $users_vote / 1000;
+					$suffix = 'K'; // Nghìn
+				} else {
+					$value = $users_vote;
+					$suffix = ''; // Không có hậu tố
+				}
+				
+				$zeros = countZeros($value);
+				
+				if ($zeros >= 3) {
+					// 3 số 0 hoặc hơn
+					$formatted_value = round($value);
+				} elseif ($zeros == 2) {
+					// 2 số 0
+					$formatted_value = round($value, 1);
+				} elseif ($zeros == 1) {
+					// 1 số 0
+					$formatted_value = round($value, 2);
+				} else {
+					// Ít hơn 1 số 0
+					$formatted_value = round($value, 2);
+				}
+				
+				$formatted_vote = $formatted_value . $suffix;
+				
+
+				// In ra kết quả cuối cùng
+				echo __( 'Vote', 'appyn' ) . ': <span>' . $formatted_vote . '</span>';
+				?>
+			</span>
+
 			<?php } ?>
 		</div>
 <?php	
@@ -57,104 +106,55 @@ function get_image_id($image_url) {
 }
 
 function px_ads($ads){
+
 	global $wp_query;
 	
 	if( is_404() ) return;
 
 	if( isset($wp_query->queried_object->count) ) 
 		if( $wp_query->queried_object->count == 0) return;
-	
-	if( is_home() || is_singular() || is_page() ) {
+	$suffix = ''; 
+    if( is_singular() || is_page() ) {
 		global $post;
-		$selected_ad = appyn_gpm( $post->ID, 'appyn_ads_control' );
-   
-		if ($selected_ad == 'ad1' ||$selected_ad == '1' || $selected_ad == 'ad2'|| $selected_ad == 'ad3'){
-			$suffix = ''; 
-			if( is_home() || is_singular() || is_page() ) {
-				if ($selected_ad == 'ad1') {
-					$suffix = '';  
-				} else if ($selected_ad == 'ad2') {
-					$suffix = '_2';  // Đặt suffix là _2 cho ad2
-				}
-				else {
-					$suffix = '_3';
-				}
-			}
-			$ads_output = '';
-			$ads_pc    = do_shortcode( get_option( 'appyn_'.$ads.$suffix ) );
-			$ads_movil = do_shortcode( get_option( 'appyn_'.$ads.'_movil'.$suffix ) );
-			$ads_amp   = do_shortcode( get_option( 'appyn_'.$ads.'_amp'.$suffix ) );
-			$ads_h 		= '<aside class="ads '.$ads.'">';
-			$ads_h     .= get_option('appyn_ads_text_above'.$suffix) ? '<small>'.get_option('appyn_ads_text_above'.$suffix).'</small>' : '';
-			if( is_amp_px() ) {
-				if( !empty($ads_amp) ) {
-					$ads_output = $ads_h.$ads_amp;
-					$ads_output .= '</aside>';
-				}
-			} else {
-				if( !empty($ads_pc) && !wp_is_mobile()) { 
-					$ads_output = $ads_h.$ads_pc;
-					$ads_output .= '</aside>';
-				}
-				elseif(!empty($ads_movil) && wp_is_mobile()) {
-					$ads_output = $ads_h.$ads_movil;
-					$ads_output .= '</aside>';
-				}
-			}
-			return stripslashes($ads_output);
-		}else{
-			global $post;
-			$suffix = '';  
-			$ads_output = '';
-			$ads_pc 	= do_shortcode( get_option( 'appyn_'.$ads ) );
-			$ads_movil 	= do_shortcode( get_option( 'appyn_'.$ads.'_movil' ) );
-			$ads_amp 	= do_shortcode( get_option( 'appyn_'.$ads.'_amp' ) );
-			$ads_h 		= '<aside class="ads '.$ads.'">';
-			$ads_h 		.= appyn_options('ads_text_above') ? '<small>'.appyn_options('ads_text_above').'</small>': '';
-			if( is_amp_px() ) {
-				if( !empty($ads_amp) ) {
-					$ads_output = $ads_h.$ads_amp;
-					$ads_output .= '</aside>';
-				}
-			} else {
-				if( !empty($ads_pc) && !wp_is_mobile()) { 
-					$ads_output = $ads_h.$ads_pc;
-					$ads_output .= '</aside>';
-				}
-				elseif(!empty($ads_movil) && wp_is_mobile()) {
-					$ads_output = $ads_h.$ads_movil;
-					$ads_output .= '</aside>';
-				}
-			}
-			return stripslashes($ads_output);
+		$selected_ad = appyn_gpm( $post->ID, 'appyn_selected_ad' );
+		if ($selected_ad == 'ad1') {
+			$suffix = '_1';  // Đặt suffix là _1 cho ad1
+		} else if ($selected_ad == 'ad2') {
+			$suffix = '_2';  // Đặt suffix là _2 cho ad2
+		}
+		if ($selected_ad != 'ad1' && $selected_ad != 'ad2') {
+			return;
 		}
 
-	}
-	else{
-	
-		$ads_output = '';
-		$ads_pc 	= do_shortcode( get_option( 'appyn_'.$ads ) );
-		$ads_movil 	= do_shortcode( get_option( 'appyn_'.$ads.'_movil' ) );
-		$ads_amp 	= do_shortcode( get_option( 'appyn_'.$ads.'_amp' ) );
-		$ads_h 		= '<aside class="ads '.$ads.'">';
-		$ads_h 		.= appyn_options('ads_text_above') ? '<small>'.appyn_options('ads_text_above').'</small>': '';
-		if( is_amp_px() ) {
-			if( !empty($ads_amp) ) {
-				$ads_output = $ads_h.$ads_amp;
-				$ads_output .= '</aside>';
-			}
-		} else {
-			if( !empty($ads_pc) && !wp_is_mobile()) { 
-				$ads_output = $ads_h.$ads_pc;
-				$ads_output .= '</aside>';
-			}
-			elseif(!empty($ads_movil) && wp_is_mobile()) {
-				$ads_output = $ads_h.$ads_movil;
-				$ads_output .= '</aside>';
-			}
+    }
+	$ads_output = '';
+
+	// Kiểm tra nếu selected_ad là ad1 hoặc ad2 để lấy giá trị tương ứng
+
+
+	// Lấy quảng cáo tương ứng với suffix
+	$ads_pc    = do_shortcode( get_option( 'appyn_'.$ads.$suffix ) );
+	$ads_movil = do_shortcode( get_option( 'appyn_'.$ads.'_movil'.$suffix ) );
+	$ads_amp   = do_shortcode( get_option( 'appyn_'.$ads.'_amp'.$suffix ) );
+	$ads_h     = '<aside class="ads '.$ads.'">';
+	$ads_h     .= get_option('appyn_ads_text_above'.$suffix) ? '<small>'.get_option('appyn_ads_text_above'.$suffix).'</small>' : '';
+
+	if( is_amp_px() ) {
+		if( !empty($ads_amp) ) {
+			$ads_output = $ads_h.$ads_amp;
+			$ads_output .= '</aside>';
 		}
-		return stripslashes($ads_output);
+	} else {
+		if( !empty($ads_pc) && !wp_is_mobile()) { 
+			$ads_output = $ads_h.$ads_pc;
+			$ads_output .= '</aside>';
+		}
+		elseif(!empty($ads_movil) && wp_is_mobile()) {
+			$ads_output = $ads_h.$ads_movil;
+			$ads_output .= '</aside>';
+		}
 	}
+	return stripslashes($ads_output);
 }
 
 function array_multi_filter_download_empty($var) {
@@ -211,7 +211,7 @@ function px_comment_nav() {
 					printf( '<div class="nav-previous">%s</div>', $prev_link );
 				endif;
 
-				if ( $next_link = get_next_comments_link( __( 'Comentarios más nuevos', 'appyn' ) ) ) :
+				if ( $next_link = get_next_comments_link( __( 'Comentarios más News', 'appyn' ) ) ) :
 					printf( '<div class="nav-next">%s</div>', $next_link );
 				endif;
 			?>
@@ -247,7 +247,7 @@ function px_reports_opt() {
 
 	$reports = array(
 		__( 'No funcionan los enlaces de descarga', 'appyn' ),
-		__( 'Hay una nueva versión', 'appyn'),
+		__( 'Hay una nueva version', 'appyn'),
 		__( 'Otros', 'appyn' ),
 	);
 
@@ -332,7 +332,6 @@ function get_datos_info($key, $key_ = false, $post_id = false){
 		$post_id = $post->ID;
 	}
 	$di = get_post_meta($post_id, 'datos_informacion', true); 
-	
 	if( !empty($di) ) { 
 		$di = array_filter($di, 'array_multi_filter_download_empty');
 
@@ -823,7 +822,7 @@ function px_data_structure() {
 
 	elseif( is_singular( 'blog' ) ) {
 		$logo = appyn_options( 'logo');
-		$logo = ( !empty($logo) ) ? $logo: get_bloginfo('template_url').'/images/logo.png';
+		$logo = ( !empty($logo) ) ? $logo: get_stylesheet_directory_uri().'/images/logo.png';
 		echo '<script type="application/ld+json">
 		{
 			"@context": "https://schema.org",
@@ -859,29 +858,29 @@ function get_store_app() {
 
 	if( $os == 'WINDOWS' ) {
 		if( is_amp_px() ) {
-			$output = '<amp-img src="'.get_template_directory_uri().'/images/microsoftstore.svg" width="40" height="40" alt="Micrososft Store"></amp-img>'; 
+			$output = '<amp-img src="'.get_stylesheet_directory_uri().'/images/microsoftstore.svg" width="40" height="40" alt="Micrososft Store"></amp-img>'; 
 		} else {
-			$output = '<img src="'.get_template_directory_uri().'/images/microsoftstore.svg" width="40" alt="Micrososft Store">';
+			$output = '<img src="'.get_stylesheet_directory_uri().'/images/microsoftstore.svg" width="40" alt="Micrososft Store">';
 		}
 	}
 	elseif( $os == 'MAC' || $os == 'iOS' ) {
 		if( is_amp_px() ) {
-			$output = '<amp-img src="'.get_template_directory_uri().'/images/appstore.svg" width="120" height="36" alt="App Store"></amp-img>'; 
+			$output = '<amp-img src="'.get_stylesheet_directory_uri().'/images/appstore.svg" width="120" height="36" alt="App Store"></amp-img>'; 
 		} else {
-			$output = '<img src="'.get_template_directory_uri().'/images/appstore.svg" width="120" alt="App Store">';
+			$output = '<img src="'.get_stylesheet_directory_uri().'/images/appstore.svg" width="120" alt="App Store">';
 		}
 	} 
 	elseif( $os == 'LINUX' ) {
 		if( is_amp_px() ) {
-			$output = '<amp-img src="'.get_template_directory_uri().'/images/appstore.png" width="60" height="60" alt="Linux"></amp-img>'; 
+			$output = '<amp-img src="'.get_stylesheet_directory_uri().'/images/appstore.png" width="60" height="60" alt="Linux"></amp-img>'; 
 		} else {
-			$output = '<img src="'.get_template_directory_uri().'/images/linux.svg" width="60" height="60" alt="Linux">';
+			$output = '<img src="'.get_stylesheet_directory_uri().'/images/linux.svg" width="60" height="60" alt="Linux">';
 		}
 	} else {
 		if( is_amp_px() ) {
-			$output = '<amp-img src="'.get_template_directory_uri().'/images/googleplay.svg" width="120" height="36" alt="Google Play"></amp-img>'; 
+			$output = '<amp-img src="'.get_stylesheet_directory_uri().'/images/googleplay.svg" width="120" height="36" alt="Google Play"></amp-img>'; 
 		} else {
-			$output = '<img src="'.get_template_directory_uri().'/images/googleplay.svg" width="120" height="36" alt="Google Play">';
+			$output = '<img src="'.get_stylesheet_directory_uri().'/images/googleplay.svg" width="120" height="36" alt="Google Play">';
 		}
 	}
 
@@ -891,18 +890,20 @@ function get_store_app() {
 function px_pay_app() {
 	global $post;
 	$datos_informacion = get_post_meta($post->ID, 'datos_informacion', true);
-
+	$currency = isset($datos_informacion['offer']['currency']) && !empty($datos_informacion['offer']['currency']) 
+    ? $datos_informacion['offer']['currency'] 
+    : 'USD';
 	if( !isset($datos_informacion['offer']['price']) ) return;
 
 	if( $datos_informacion['offer']['price'] != "pago" ) return;
 
 	if( empty($datos_informacion['offer']['amount']) ) {	
 		return '<ul class="amount-app">
-			<li>'.__( 'De pago', 'appyn' ).'</li>
+			<li>'.__( 'Paid', 'appyn' ).'</li>
 		</ul>';
 	} else {
 		return '<ul class="amount-app">
-	<li>'.$datos_informacion['offer']['amount'].' '.$datos_informacion['offer']['currency'].'</li>
+	<li>'.$datos_informacion['offer']['amount'].' '.$currency.'</li>
 </ul>';
 	}
 }
@@ -929,7 +930,6 @@ function get_http_response_code( $url ) {
 		return true;
 	} else {
 		$data = array(
-			'apikey' 	=> appyn_options( 'apikey', true ),
 			'website'	=> get_site_url(),
 			'app'		=> trim($url)
 		);
@@ -1002,7 +1002,8 @@ function versions_permalink() {
 	}
 }
 
-function px_nav_menu( $type = '' ) {
+function px_nav_menu($type = '' ) {
+	
 
 	$c = '';
 	$button_light_dark = '';
@@ -1089,16 +1090,16 @@ function px_post_status() {
 
 		if( $inf['app_status'] == 'new' ) {
 			if( date('U') <= date('U', strtotime($post->post_date. '+ 2 weeks')) )
-				return '<div class="bloque-status bs-new" title="'.__( 'Nuevo', 'appyn' ).'">'.__( 'Nuevo', 'appyn' ).'</div>';
+				return '<div class="bloque-status bs-new" title="'.__( 'New', 'appyn' ).'">'.__( 'New', 'appyn' ).'</div>';
 		}
 		elseif( $inf['app_status'] == 'updated' ) {
 			if( appyn_options( 'ribbon_update_post_modified', true ) == 1 ) {
 				if( date('U') <= date('U', strtotime($post->post_modified. '+ 2 weeks')) ) {
-					return '<div class="bloque-status bs-update" title="'.__( 'Actualizado', 'appyn' ).'">'.__('Actualizado', 'appyn').'</div>';
+					return '<div class="bloque-status bs-update" title="'.__( 'Updated', 'appyn' ).'">'.__('Updated', 'appyn').'</div>';
 				}
 			} else {
 				if( date('U') <= date('U', strtotime($post->post_date. '+ 2 weeks')) ) {
-					return '<div class="bloque-status bs-update" title="'.__( 'Actualizado', 'appyn' ).'">'.__('Actualizado', 'appyn').'</div>';
+					return '<div class="bloque-status bs-update" title="'.__( 'Updated', 'appyn' ).'">'.__('Updated', 'appyn').'</div>';
 				}
 			}
 		} else {
@@ -1162,7 +1163,7 @@ function replace_class($items, $args)  {
 
 function px_logo() {
 	$logo = appyn_options( 'logo');
-	$logo = ( !empty($logo) ) ? $logo: get_bloginfo('template_url').'/images/logo.png';
+	$logo = ( !empty($logo) ) ? $logo: get_stylesheet_directory_uri().'/images/logo.png';
 	$logo_id = attachment_url_to_postid( $logo );
 	if( empty($logo_id) ) {
 		$m = array( 1 => 150, 2 => 40 );
@@ -1180,7 +1181,6 @@ function px_download_link($url) {
 	}
 	return $url;
 }
-
 
 function px_encrypt_decrypt($action, $string) {
     $output = false;
@@ -1211,7 +1211,7 @@ function px_option_selected_upload() {
 	$tsr = appyn_options( 'edcgp_sapk_server' );
 
 	if( $tsr == 2 ) {
-		return __( 'Google Drive', 'appyn' ). ( ( !appyn_options( 'gdrive_token' ) ) ? ' '. __( '(No activado)', 'appyn' ) : '' );
+		return __( 'Google Drive', 'appyn' ). ( ( !appyn_options( 'gdrive_token' ) ) ? ' '. __( '(No activated)', 'appyn' ) : '' );
 	} elseif( $tsr == 3 ) {
 		return __( 'Dropbox', 'appyn' ). (!appyn_options( 'dropbox_result' ) ?  ' '. __( '(Falta token de acceso)', 'appyn' ) : '' );
 	} elseif( $tsr == 4 ) {
@@ -1219,11 +1219,11 @@ function px_option_selected_upload() {
 	} elseif( $tsr == 5 ) {
 		return __( '1Fichier', 'appyn' );
 	} elseif( $tsr == 6 ) {
-		return __( 'OneDrive', 'appyn' ). ( ( !appyn_options( 'onedrive_access_token' ) ) ? ' '. __( '(No activado)', 'appyn' ) : '' );
+		return __( 'OneDrive', 'appyn' ). ( ( !appyn_options( 'onedrive_access_token' ) ) ? ' '. __( '(No activated)', 'appyn' ) : '' );
 	} elseif( $tsr == 7 ) {
-		return __( 'Telegram', 'appyn' ). " ". __( '(Máximo 20 MB)', 'appyn' ).( ( !appyn_options( 'telegram_token' ) || !appyn_options( 'telegram_chatid' ) ) ? ' '. __( '(No activado)', 'appyn' ) : '' );
+		return __( 'Telegram', 'appyn' ). " ". __( '(Máximo 20 MB)', 'appyn' ).( ( !appyn_options( 'telegram_token' ) || !appyn_options( 'telegram_chatid' ) ) ? ' '. __( '(No activated)', 'appyn' ) : '' );
 	} else {
-		return __( 'Mi servidor', 'appyn' );
+		return __( 'My server', 'appyn' );
 	} 
 }
 
@@ -1254,9 +1254,9 @@ function px_rms_callback() {
 function px_gte( $a ) {
 	$gte = appyn_options( 'general_text_edit', true );
 	$opts = array(
-		'amc' => __( 'Top Rated Apps', 'appyn' ),
-		'uadnw' => __( 'Últimas aplicaciones de nuestra web', 'appyn' ),
-		'bua' => __( 'App search', 'appyn' ),
+		'amc' => __( 'Top rated apps', 'appyn' ),
+		'uadnw' => __( 'Latest apps from our website', 'appyn' ),
+		'bua' => __( 'Search for an app', 'appyn' ),
 	);
 	return ( !empty($gte[$a]) ) ? $gte[$a] : $opts[$a];
 }
@@ -1265,17 +1265,7 @@ function appyn_gpm( $post_id, $key, $default = "" ) {
 	return ( get_post_meta( $post_id, $key, true ) ) ? get_post_meta( $post_id, $key, true ) : $default;
 }
 
-function px_count_update_apps($a = false) {
 
-	$results = get_option( 'trans_updated_apps', null );
-
-	if( ! $results ) return 0;
-
-	$count = count($results);
-
-	return ( $a ) ? ( ( $count > 99 ) ? '99+' : $count ) : $count;
-
-}
 
 function in_array_r($needle, $haystack, $strict = false) {
     foreach ($haystack as $item) {
@@ -1304,7 +1294,6 @@ function func_remote_post_check_apps( $list_ids ) {
         	'Expect' => '',
 		),
 		'body' => array( 
-			'apikey' => appyn_options( 'apikey', true ), 
 			'website' => get_site_url(),
 			'apps' => $list_ids
 		),
@@ -1336,8 +1325,8 @@ function px_btoc( $size ){
 function arr_values_app_status() {
 
 	$arr = array(
-		'new' =>  __( 'Nuevo', 'appyn' ),
-		'updated' => __( 'Actualizado', 'appyn' ),
+		'new' =>  __( 'New', 'appyn' ),
+		'updated' => __( 'Updated', 'appyn' ),
 	);
 
 	return $arr;
@@ -1347,7 +1336,7 @@ function px_filter_app_status() {
 
 	$ads = apply_filters( 'add_value_app_status', arr_values_app_status() );
 
-	echo '<option value="">'. __( 'Ninguno', 'appyn' ) .'</option>';
+	echo '<option value="">'. __( 'None', 'appyn' ) .'</option>';
 
 	foreach( $ads as $k => $a ) {
 		echo '<option value="'.$k.'" '. selected( get_datos_info('app_status'), $k, false ) .'>'.$a.'</option>';
@@ -1373,60 +1362,61 @@ function remove_ldl() {
 
 function px_cats_app() {
 	
-	$catsapp = array(
-		'GAMES' => __( 'Juegos', 'appyn' ), 
-		'GAME_ACTION' => __( 'Juegos de acción', 'appyn' ), 
-		'GAME_ADVENTURE' => __( 'Juegos de aventura', 'appyn' ), 
-		'GAME_RACING' => __( 'Juegos de carreras', 'appyn' ), 
-		'GAME_CARD' => __( 'Juegos de cartas', 'appyn' ), 
-		'GAME_CASINO' => __( 'Juegos de casino', 'appyn' ), 
-		'GAME_EDUCATIONAL' => __( 'Juegos educativos', 'appyn' ), 
-		'GAME_STRATEGY' => __( 'Juegos de estrategia', 'appyn' ), 
-		'GAME_SPORTS' => __( 'Juegos de deportes', 'appyn' ), 
-		'GAME_BOARD' => __( 'Juegos de mesa', 'appyn' ), 
-		'GAME_WORD' => __( 'Juegos de palabras', 'appyn' ), 
-		'GAME_ROLE_PLAYING' => __( 'Juegos de rol', 'appyn' ), 
-		'GAME_CASUAL' => __( 'Juegos ocasionales', 'appyn' ), 
-		'GAME_MUSIC' => __( 'Juegos de música', 'appyn' ), 
-		'GAME_TRIVIA' => __( 'Preguntas y respuestas', 'appyn' ), 
-		'GAME_PUZZLE' => __( 'Juegos de rompecabezas', 'appyn' ), 
-		'GAME_ARCADE' => __( 'Sala de juegos', 'appyn' ), 
-		'GAME_SIMULATION' => __( 'Juegos de simulación', 'appyn' ),
-		'VIDEO_PLAYERS' => __( 'Aplicaciones de video', 'appyn' ), 
-		'ANDROID_WEAR' => __( 'Apps de reloj', 'appyn' ), 
-		'ART_AND_DESIGN' => __( 'Arte y diseño', 'appyn' ), 
-		'AUTO_AND_VEHICLES' => __( 'Autos y vehículos', 'appyn' ), 
-		'BEAUTY' => __( 'Belleza', 'appyn' ), 
-		'LIBRARIES_AND_DEMO' => __( 'Bibliotecas y demostración', 'appyn' ), 
-		'WATCH_FACE' => __( 'Caras de reloj', 'appyn' ), 
-		'FOOD_AND_DRINK' => __( 'Comer y beber', 'appyn' ), 
-		'SHOPPING' => __( 'Compras', 'appyn' ), 
-		'COMMUNICATION' => __( 'Comunicación', 'appyn' ), 
-		'DATING' => __( 'Conocer personas', 'appyn' ), 
-		'COMICS' => __( 'Cómics', 'appyn' ), 
-		'SPORTS' => __( 'Deportes', 'appyn' ), 
-		'EDUCATION' => __( 'Educación', 'appyn' ), 
-		'ENTERTAINMENT' => __( 'Entretenimiento', 'appyn' ), 
-		'LIFESTYLE' => __( 'Estilo de vida', 'appyn' ), 
-		'EVENTS' => __( 'Eventos', 'appyn' ), 
-		'FINANCE' => __( 'Finanzas', 'appyn' ), 
-		'PHOTOGRAPHY' => __( 'Fotografía', 'appyn' ), 
-		'TOOLS' => __( 'Herramientas', 'appyn' ), 
-		'HOUSE_AND_HOME' => __( 'Inmuebles y hogar', 'appyn' ), 
-		'BOOKS_AND_REFERENCE' => __( 'Libros y referencias', 'appyn' ), 
-		'MAPS_AND_NAVIGATION' => __( 'Mapas y navegación', 'appyn' ), 
-		'MEDICAL' => __( 'Medicina', 'appyn' ), 
-		'MUSIC_AND_AUDIO' => __( 'Música y audio', 'appyn' ), 
-		'BUSINESS' => __( 'Negocios', 'appyn' ), 
-		'NEWS_AND_MAGAZINES' => __( 'Noticias y revistas', 'appyn' ), 
-		'PERSONALIZATION' => __( 'Personalización', 'appyn' ), 
-		'PRODUCTIVITY' => __( 'Productividad', 'appyn' ), 
-		'HEALTH_AND_FITNESS' => __( 'Salud y bienestar', 'appyn' ), 
-		'PARENTING' => __( 'Ser padres', 'appyn' ), 
+	$catsapp = array( 
+		'GAMES' => __( 'Games', 'appyn' ), 
+		'GAME_ACTION' => __( 'Action games', 'appyn' ), 
+		'GAME_ADVENTURE' => __( 'Adventure games', 'appyn' ), 
+		'GAME_RACING' => __( 'Racing games', 'appyn' ), 
+		'GAME_CARD' => __( 'Card games', 'appyn' ), 
+		'GAME_CASINO' => __( 'Casino games', 'appyn' ), 
+		'GAME_EDUCATIONAL' => __( 'Educational games', 'appyn' ), 
+		'GAME_STRATEGY' => __( 'Strategy games', 'appyn' ), 
+		'GAME_SPORTS' => __( 'Sports games', 'appyn' ), 
+		'GAME_BOARD' => __( 'Board games', 'appyn' ), 
+		'GAME_WORD' => __( 'Word games', 'appyn' ), 
+		'GAME_ROLE_PLAYING' => __( 'Role-playing games', 'appyn' ), 
+		'GAME_CASUAL' => __( 'Casual games', 'appyn' ), 
+		'GAME_MUSIC' => __( 'Music games', 'appyn' ), 
+		'GAME_TRIVIA' => __( 'Trivia games', 'appyn' ), 
+		'GAME_PUZZLE' => __( 'Puzzle games', 'appyn' ), 
+		'GAME_ARCADE' => __( 'Arcade games', 'appyn' ), 
+		'GAME_SIMULATION' => __( 'Simulation games', 'appyn' ), 
+		'VIDEO_PLAYERS' => __( 'Video applications', 'appyn' ), 
+		'ANDROID_WEAR' => __( 'Wear apps', 'appyn' ), 
+		'ART_AND_DESIGN' => __( 'Art and design', 'appyn' ), 
+		'AUTO_AND_VEHICLES' => __( 'Auto and vehicles', 'appyn' ), 
+		'BEAUTY' => __( 'Beauty', 'appyn' ), 
+		'LIBRARIES_AND_DEMO' => __( 'Libraries and demo', 'appyn' ), 
+		'WATCH_FACE' => __( 'Watch faces', 'appyn' ), 
+		'FOOD_AND_DRINK' => __( 'Food and drink', 'appyn' ), 
+		'SHOPPING' => __( 'Shopping', 'appyn' ), 
+		'COMMUNICATION' => __( 'Communication', 'appyn' ), 
+		'DATING' => __( 'Dating', 'appyn' ), 
+		'COMICS' => __( 'Comics', 'appyn' ), 
+		'SPORTS' => __( 'Sports', 'appyn' ), 
+		'EDUCATION' => __( 'Education', 'appyn' ), 
+		'ENTERTAINMENT' => __( 'Entertainment', 'appyn' ), 
+		'LIFESTYLE' => __( 'Lifestyle', 'appyn' ), 
+		'EVENTS' => __( 'Events', 'appyn' ), 
+		'FINANCE' => __( 'Finance', 'appyn' ), 
+		'PHOTOGRAPHY' => __( 'Photography', 'appyn' ), 
+		'TOOLS' => __( 'Tools', 'appyn' ), 
+		'HOUSE_AND_HOME' => __( 'House and home', 'appyn' ), 
+		'BOOKS_AND_REFERENCE' => __( 'Books and reference', 'appyn' ), 
+		'MAPS_AND_NAVIGATION' => __( 'Maps and navigation', 'appyn' ), 
+		'MEDICAL' => __( 'Medical', 'appyn' ), 
+		'MUSIC_AND_AUDIO' => __( 'Music and audio', 'appyn' ), 
+		'BUSINESS' => __( 'Business', 'appyn' ), 
+		'NEWS_AND_MAGAZINES' => __( 'News and magazines', 'appyn' ), 
+		'PERSONALIZATION' => __( 'Personalization', 'appyn' ), 
+		'PRODUCTIVITY' => __( 'Productivity', 'appyn' ), 
+		'HEALTH_AND_FITNESS' => __( 'Health and fitness', 'appyn' ), 
+		'PARENTING' => __( 'Parenting', 'appyn' ), 
 		'SOCIAL' => __( 'Social', 'appyn' ), 
-		'WEATHER' => __( 'Tiempo', 'appyn' ), 
-		'TRAVEL_AND_LOCAL' => __( 'Viajes', 'appyn' ), 
+		'WEATHER' => __( 'Weather', 'appyn' ), 
+		'TRAVEL_AND_LOCAL' => __( 'Travel and local', 'appyn' ),
 	);
+	
 
 	return $catsapp;
 }
@@ -1486,7 +1476,7 @@ function px_content_search_page() {
 		echo '<script async src="https://cse.google.com/cse.js?cx='.appyn_options( 'search_google_id', true ).'"></script>
 		<div class="section">
     		<div class="title-section">
-				'.__( 'Buscar', 'appyn' ).': '.$_GET['q'].'
+				'.__( 'Look for', 'appyn' ).': '.$_GET['q'].'
 			</div>
 			<div class="gcse-searchresults-only"></div>
 		</div>
@@ -1537,14 +1527,14 @@ function px_shorten_download_link( $url, $shrt ) {
 
 function px_eia_default() {
 	$arr = array( 
-		'developer' => __( 'Desarrollador', 'appyn' ), 
-		'released_on' => __( 'Lanzamiento', 'appyn' ),
-		'updated' => __( 'Actualización', 'appyn' ), 
-		'size' => __( 'Tamaño', 'appyn' ), 
-		'version' => __( 'Versión', 'appyn' ), 
-		'requirements' => __( 'Requerimientos', 'appyn' ), 
-		'downloads' => __( 'Descargas', 'appyn' ), 
-		'get_in_on' => __( 'Consíguelo en', 'appyn' ),
+		'developer' => __( 'Developer', 'appyn' ), 
+		'released_on' => __( 'Release Date', 'appyn' ),
+		'updated' => __( 'Update on', 'appyn' ), 
+		'size' => __( 'Size', 'appyn' ), 
+		'version' => __( 'Version', 'appyn' ), 
+		'requirements' => __( 'Requirements', 'appyn' ), 
+		'downloads' => __( 'Downloads', 'appyn' ), 
+		'get_in_on' => __( 'Get it on', 'appyn' ),
 	);
 
 	return $arr;

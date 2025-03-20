@@ -67,64 +67,17 @@ add_action( 'init', 'px_theme_menus' );
 
 function px_theme_menus() {
     $locations = array(
-        'menu' => __( 'Menú', 'appyn' ),
-        'menu-mobile' => __( 'Menú movil', 'appyn' ),
-		'menu-footer' => __( 'Menú footer', 'appyn' ),
-		'menu-fixed-bottom' => __( 'Menú inferior fijo (Móvil)', 'appyn' ),
+        'menu' => __( 'Menu', 'appyn' ),
+        'menu-mobile' => __( 'Menu mobile', 'appyn' ),
+		'menu-footer' => __( 'Menu footer', 'appyn' ),
+		'menu-fixed-bottom' => __( 'Menu fixed bottom (Mobile)', 'appyn' ),
     );
     register_nav_menus( $locations );
 }
 
-add_action( 'widgets_init', 'px_widget_init' );
-
-function px_widget_init() {
-
-	register_sidebar(array(
-		'name' => 'Sidebar',
-		'id' => 'sidebar-1',
-		'before_widget' => '<li id="%1$s" class="widget %2$s">',
-		'after_widget' => '</li>',
-		'before_title' => '<h2 class="widget-title">',
-		'after_title' => '</h2>',
-		)
-	);
-
-	register_sidebar(array(
-		'name' => 'Footer',
-		'id' => 'sidebar-footer',
-		'before_widget' => '<li id="%1$s" class="widget %2$s">',
-		'after_widget' => '</li>',
-		'before_title' => '<h2 class="widget-title">',
-		'after_title' => '</h2>',
-	));
-
-	if( appyn_options( 'blog_sidebar' ) ) {
-		register_sidebar(array(
-			'name' => 'Sidebar Blog',
-			'id' => 'sidebar-blog',
-			'before_widget' => '<li id="%1$s" class="widget %2$s">',
-			'after_widget' => '</li>',
-			'before_title' => '<h2 class="widget-title">',
-			'after_title' => '</h2>',
-			)
-		);
-	}
-
-	if( appyn_options( 'og_sidebar' ) ) {
-		register_sidebar(array(
-			'name' => 'Sidebar General',
-			'id' => 'sidebar-general',
-			'before_widget' => '<li id="%1$s" class="widget %2$s">',
-			'after_widget' => '</li>',
-			'before_title' => '<h2 class="widget-title">',
-			'after_title' => '</h2>',
-			)
-		);
-	}
-}
 
 function all_options() {
-	$url = get_bloginfo('template_url');
+	$url = get_stylesheet_directory_uri();
 	$options = array(
 		'logo' => $url.'/images/logo.png',
 		'favicon' => $url.'/images/favicon.ico', 
@@ -276,12 +229,12 @@ function dev_taxonomy_register() {
 		'dev',
     	'post',
     	array(
-      		'label' => __( 'Desarrollador', 'appyn' ),
+      		'label' => __( 'Developer', 'appyn' ),
       		'sort' => true,
       		'args' => array( 'orderby' => 'term_order' ),
 			'show_in_rest' => true,
       		'rewrite' => array( 'slug' => 'dev' ),
-	  		'labels' => array( 'menu_name' => __( 'Desarrollador', 'appyn' ) )
+	  		'labels' => array( 'menu_name' => __( 'Developer', 'appyn' ) )
     	)
   	);
 
@@ -416,113 +369,75 @@ function wpse18703_posts_where($where, $wp_query){
 add_action( 'add_meta_boxes', 'datos_meta_boxes' );  
 
 function datos_meta_boxes(){ 
-	add_meta_box('versions', __( 'Versiones', 'appyn' ), 'callback_versions', 'post', 'normal');  
-	add_meta_box('datos_informacion', __( 'Información de la aplicación', 'appyn' ), 'callback_informacion', 'post', 'normal');  
-	add_meta_box('datos_video',  __( 'Video de la aplicación', 'appyn' ), 'callback_video', 'post', 'normal');  
-	add_meta_box('datos_imagenes', __( 'Imágenes de la aplicación', 'appyn' ), 'callback_imagenes', 'post', 'normal');  
-	add_meta_box('datos_download', __( 'Enlaces de descarga de la aplicación', 'appyn' ), 'datos_download', 'post', 'normal');  
-	add_meta_box('custom_boxes', __( 'Cajas personalizadas', 'appyn' ), 'custom_boxes', 'post', 'normal');  
-	add_meta_box('permanent_custom_boxes', __( 'Cajas personalizadas permanentes', 'appyn' ), 'permanent_custom_boxes', 'post', 'normal');  
-	add_meta_box('box_ads_control', __( 'Ad Control', 'appyn' ), 'callback_box_ads_control', array('post', 'page', 'blog'), 'normal');   
-	add_meta_box('control_elements', __( 'Control de elementos', 'appyn' ), 'callback_control_elements', array('page'), 'normal');  
-}  
+    add_meta_box(
+        'datos_informacion', 
+        __( 'Application Information', 'appyn' ), 
+        'callback_informacion', 
+        'post', 
+        'normal'
+    );  
+    
+    add_meta_box(
+        'datos_video',  
+        __( 'Application Video', 'appyn' ), 
+        'callback_video', 
+        'post', 
+        'normal'
+    );  
+    
+    add_meta_box(
+        'datos_imagenes', 
+        __( 'Application Images', 'appyn' ), 
+        'callback_images', 
+        'post', 
+        'normal'
+    ); 
+     
+    add_meta_box(
+        'datos_download', 
+        __( 'Application Download Links', 'appyn' ), 
+        'datos_download', 
+        'post', 
+        'normal'
+    );  
+    
+    add_meta_box(
+        'custom_boxes', 
+        __( 'Custom Boxes', 'appyn' ), 
+        'custom_boxes', 
+        'post', 
+        'normal'
+    );  
+    
+    add_meta_box(
+        'permanent_custom_boxes', 
+        __( 'Permanent Custom Boxes', 'appyn' ), 
+        'permanent_custom_boxes', 
+        'post', 
+        'normal'
+    );  
+    
+    add_meta_box(
+        'box_ads_control', 
+        __( 'Ads Control', 'appyn' ), 
+        'callback_box_ads_control', 
+        array('post', 'page', 'blog'), 
+        'normal'
+    );   
+    
 
-function callback_versions($post) {
-	
-	echo '
-	<table class="table_s" style="width:100%;">
-		<thead>
-			<tr>
-				<th style="width:150px;">'.__( 'Versión', 'appyn' ).'</th>
-				<th>'.__( 'Título', 'appyn' ).'</th>
-				<th style="width:150px;">'.__( 'Fecha de actualización', 'appyn' ).'</th>
-			</tr>
-		</thead>
-		<tbody>';
-		
-		$date_change = array(
-			'enero' => '01',
-			'febrero' => '02',
-			'marzo' => '03',
-			'abril' => '04',
-			'mayo' => '05',
-			'junio' => '06',
-			'julio' => '07',
-			'agosto' => '08',
-			'setiembre' => '09',
-			'octubre' => '10',
-			'noviembre' => '11',
-			'diciembre' => '12',
-			' de ' => '-',
-		);
-		
-		$args = array( 
-			'post_parent' => $post->ID, 
-			'posts_per_page' => -1,
-			'post_status' => 'publish',
-			'ignore_sticky_posts' => 1,
-		);
-
-		if( $post->post_parent != 0 ) {
-			$args['post_parent'] = $post->post_parent;
-			$args['post__not_in'] = array($post->ID);
-			$post_add = get_post($post->post_parent);
-		}
-
-		$versions = get_posts( $args );
-
-		if( $versions || isset($post_add) ) : 
-
-			if( $post->post_parent != 0 ) {
-			
-				$pid = wp_get_post_parent_id($post->ID);
-				$inf = get_post_meta( $pid, 'datos_informacion', true );
-				echo '<tr>
-					<td><a href="'.get_edit_post_link( $pid ).'">'.(( !empty($inf['version']) ) ? $inf['version'] : '-').'</a></td>
-					<td>'.get_the_title( $pid ).'</td>
-					<td>'.(( !empty($inf['fecha_actualizacion']) ) ? date_i18n( 'd/m/Y', strtotime(strtr($inf['fecha_actualizacion'], $date_change)) ) : '-').'</td>
-				</tr>';
-			}
-			foreach( $versions as $post ) : setup_postdata($post);
-				$inf = get_post_meta( $post->ID, 'datos_informacion', true );
-				echo '<tr>
-					<td><a href="'.get_edit_post_link( $post->ID ).'">'.(( !empty($inf['version']) ) ? $inf['version'] : '-').'</a></td>
-					<td>'.$post->post_title.'</td>
-					<td>'.(( !empty($inf['fecha_actualizacion']) ) ? date_i18n( 'd/m/Y', strtotime(strtr($inf['fecha_actualizacion'], $date_change)) ) : '-').'</td>
-				</tr>';
-			endforeach;
-
-		else :
-			echo '<tr>
-				<td colspan="100%">'.__( 'No hay versiones', 'appyn' ).'</td>
-			</tr>';
-		endif;
-
-	echo '</tbody>
-	</table>';
-	wp_reset_postdata();
 }
+
+
 
 function callback_box_ads_control( $post ){
 
-	$selected_ad = appyn_gpm( $post->ID, 'appyn_ads_control' );
-
-	
-	echo '<p><label><input type="radio" name="appyn_ads_control" value="ad1" ' . checked( 'ad1', $selected_ad, false ) . '> ' . __( 'GA1 SEO Full', 'appyn' ) . '</label></p>';
-    echo '<p><label><input type="radio" name="appyn_ads_control" value="ad2" ' . checked( 'ad2', $selected_ad, false ) . '> ' . __( 'GA2 Khac#', 'appyn' ) . '</label></p>';
-	echo '<p><label><input type="radio" name="appyn_ads_control" value="ad3" ' . checked( 'ad3', $selected_ad, false ) . '> ' . __( 'Disable Ads', 'appyn' ) . '</label></p>';
-
+	$selected_ad = appyn_gpm( $post->ID, 'appyn_selected_ad' );
+	echo '<p><label><input type="radio" name="appyn_selected_ad" value="ad1" ' . checked( 'ad1', $selected_ad, false ) . '> ' . __( 'Ads Name 1', 'appyn' ) . '</label></p>';
+    echo '<p><label><input type="radio" name="appyn_selected_ad" value="ad2" ' . checked( 'ad2', $selected_ad, false ) . '> ' . __( 'Ads Name 2', 'appyn' ) . '</label></p>';
+	echo '<p><label><input type="radio" name="appyn_selected_ad" value="ad3" ' . checked( 'ad3', $selected_ad, false ) . '> ' . __( 'Disable Ads', 'appyn' ) . '</label></p>';
 }
 
-function callback_control_elements( $post ){
-	$ac = appyn_gpm( $post->ID, 'appyn_hidden_sidebar' );
-	$ac2 = appyn_gpm( $post->ID, 'appyn_hidden_post_meta' );
-	$ac3 = appyn_gpm( $post->ID, 'appyn_hidden_social_buttons' );
-
-	echo '<p><label><input type="checkbox" name="appyn_hidden_sidebar" value="1" '.checked( 1, $ac, false ).'> '.__( 'Ocultar sidebar', 'appyn' ). '</label></p>';
-	echo '<p><label><input type="checkbox" name="appyn_hidden_post_meta" value="1" '.checked( 1, $ac2, false ).'> '.__( 'Ocultar post meta', 'appyn' ). '</label></p>';
-	echo '<p><label><input type="checkbox" name="appyn_hidden_social_buttons" value="1" '.checked( 1, $ac3, false ).'> '.__( 'Ocultar botones sociales', 'appyn' ). '</label></p>';
-}
 
 function permanent_custom_boxes( $post ){
 	$pcb = get_option( 'permanent_custom_boxes' );
@@ -534,219 +449,260 @@ function permanent_custom_boxes( $post ){
 		foreach($pcb as $box_key => $box_value) : $i++;
 			if( !empty( $box_value['title'] ) || !empty( $box_value['content'] ) ) { ?>
 			<div class="boxes-a">
-				<h4><?php echo sprintf( __( 'Caja permanente %s', 'appyn' ), '#'.$i ); ?></h4>
-				<p><input type="text" id="permanent_custom_boxes-title" class="widefat" name="permanent_custom_boxes[<?php echo $box_key; ?>][title]" value="<?php echo $box_value['title']; ?>" placeholder="<?php echo __( 'Título para la caja', 'appyn' ); ?>"></p>
+				<h4><?php echo sprintf( __( 'Permanent box %s', 'appyn' ), '#'.$i ); ?></h4>
+				<p><input type="text" id="permanent_custom_boxes-title" class="widefat" name="permanent_custom_boxes[<?php echo $box_key; ?>][title]" value="<?php echo $box_value['title']; ?>" placeholder="<?php echo __( 'Title for the box', 'appyn' ); ?>"></p>
 
 				<p><?php wp_editor_fix($box_value['content'], 'permanent_custom_boxes-'.$box_key, array('textarea_name' => 'permanent_custom_boxes['.$box_key.'][content]', 'textarea_rows' => 5)); ?>
 				</p>
-				<p><a href="javascript:void(0)" class="delete-boxes button"><?php echo __( 'Borrar caja', 'appyn' ); ?></a></p>
+				<p><a href="javascript:void(0)" class="delete-boxes button"><?php echo __( 'Delete box', 'appyn' ); ?></a></p>
 			</div>
 <?php } endforeach; 
 	}
 	echo '</div>';
-	echo '<a href="javascript:void(0)" id="add-permanent-boxes" class="button">+ '.__( 'Añadir caja', 'appyn' ).'</a>'; ?>
+	echo '<a href="javascript:void(0)" id="add-permanent-boxes" class="button">+ '.__( 'Add box', 'appyn' ).'</a>'; ?>
 <?php
 }
 
 function custom_boxes( $post ){
-	$custom_boxes = get_post_meta($post->ID, 'custom_boxes', true);
-	echo '<div id="boxes-content">';
-	if(!empty($custom_boxes)) {
-		foreach($custom_boxes as $box_key => $box_value) : 
-			if( !empty( $box_value['title'] ) || !empty( $box_value['content'] ) ) { ?>
-				<div class="boxes-a">
-					<p><input type="text" id="custom_boxes-title" class="widefat" name="custom_boxes[<?php echo $box_key; ?>][title]"     value="<?php echo $box_value['title']; ?>"     placeholder="<?php echo __( 'Título para la caja', 'appyn' ); ?>"></p>
+    $custom_boxes = get_post_meta($post->ID, 'custom_boxes', true);
+    echo '<div id="boxes-content">';
+    if(!empty($custom_boxes)) {
+        foreach($custom_boxes as $box_key => $box_value) : 
+            if( !empty( $box_value['title'] ) || !empty( $box_value['content'] ) ) { ?>
+                <div class="boxes-a">
+                    <p>
+                        <input 
+                            type="text" 
+                            id="custom_boxes-title" 
+                            class="widefat" 
+                            name="custom_boxes[<?php echo $box_key; ?>][title]" 
+                            value="<?php echo esc_attr($box_value['title']); ?>" 
+                            placeholder="<?php echo __( 'Title for the box', 'appyn' ); ?>"
+                        >
+                    </p>
 
-					<p><?php wp_editor_fix($box_value['content'], 'custom_boxes-'.$box_key, array('textarea_name' => 'custom_boxes['.$box_key.'][content]', 'textarea_rows' => 5)); ?>
-					</p>
-					<p><a href="javascript:void(0)" class="delete-boxes button"><?php echo __( 'Borrar caja', 'appyn' ); ?></a></p>
-				</div>
-		<?php } endforeach; 
-	}
-	echo '</div>';
-	echo '<a href="javascript:void(0)" id="add-boxes" class="button">+ '.__( 'Añadir caja', 'appyn' ).'</a>';
+                    <p>
+                        <?php 
+                        wp_editor_fix(
+                            $box_value['content'], 
+                            'custom_boxes-'.$box_key, 
+                            array(
+                                'textarea_name' => 'custom_boxes['.$box_key.'][content]', 
+                                'textarea_rows' => 5
+                            )
+                        ); 
+                        ?>
+                    </p>
+                    <p>
+                        <a href="javascript:void(0)" class="delete-boxes button">
+                            <?php echo __( 'Delete box', 'appyn' ); ?>
+                        </a>
+                    </p>
+                </div>
+        <?php } endforeach; 
+    }
+    echo '</div>';
+    echo '<a href="javascript:void(0)" id="add-boxes" class="button">+ '.__( 'Add box', 'appyn' ).'</a>';
 }
+
 
 function px_label_help( $t, $a = false ) {
 	return '<div class="px-label-info"><span class="dashicons dashicons-editor-help"></span><div class="pxli-content"'.(($a) ? ' style="width:auto"' : '').'>'.$t.'</div></div>';
 }
 
 function callback_informacion( $post ){
-?>
-	<div><?php echo __( 'Estado de aplicación', 'appyn' ); ?>:
-		<?php echo px_label_help( __('Con esta opción aparecerá una franja en cada aplicación lo cual indicará si se ha actualizado o es una aplicación nueva. La opción activa tendrá un tiempo de duración de 2 semanas basada en la fecha de publicación del post. Por ejemplo, si usted marca "Actualizado" y la fecha de creación del post es hoy, la franja aparecerá solo por 2 semanas.', 'appyn' )); ?>
-		<select name="datos_informacion[app_status]" id="app_status">
-			<?php px_filter_app_status(); ?>
-		</select>
-	</div>
+    ?>
+    <div><?php echo __( 'Application Status', 'appyn' ); ?>:
+        <?php echo px_label_help( __('With this option, a banner will appear on each application indicating whether it has been updated or is a new application. The active option will have a duration of 2 weeks based on the post\'s publication date. For example, if you mark "Updated" and the post\'s creation date is today, the banner will only appear for 2 weeks.', 'appyn' )); ?>
+        <select name="datos_informacion[app_status]" id="app_status">
+            <?php px_filter_app_status(); ?>
+        </select>
+    </div>
 
-	<p><?php echo __( 'Tipo de aplicación', 'appyn' ); ?>:
-		<select name="app_type" id="app_type">
-			<option value="0"><?php echo __( 'Normal', 'appyn' ); ?></option>
-			<option value="1"<?php selected( appyn_gpm( $post->ID, 'app_type' ), 1 ); ?>>MOD</option>
-		</select>
-	</p>
+    <p><?php echo __( 'Application Type', 'appyn' ); ?>:
+        <select name="app_type" id="app_type">
+            <option value="0"><?php echo __( 'Normal', 'appyn' ); ?></option>
+            <option value="1"<?php selected( appyn_gpm( $post->ID, 'app_type' ), 1 ); ?>>MOD</option>
+        </select>
+    </p>
 
-	<p><?php echo __( 'Breve descripción', 'appyn' ); ?>:<br>
-		<textarea class="widefat" name="datos_informacion[descripcion]" id="descripcion"><?php echo get_datos_info('descripcion'); ?></textarea>
-	</p>
+    <p><?php echo __( 'Short Description', 'appyn' ); ?>:<br>
+        <textarea class="widefat" name="datos_informacion[descripcion]" id="descripcion"><?php echo get_datos_info('descripcion'); ?></textarea>
+    </p>
 
-	<p><?php echo __( 'Versión', 'appyn' ); ?>:<br>
-		<input type="text" class="widefat" name="datos_informacion[version]" id="version" value="<?php echo strip_tags(get_datos_info('version')); ?>">
-	</p>
+    <p><?php echo __( 'Version', 'appyn' ); ?>:<br>
+        <input type="text" class="widefat" name="datos_informacion[version]" id="version" value="<?php echo strip_tags(get_datos_info('version')); ?>">
+    </p>
 
-	<p><?php echo __( 'Tamaño', 'appyn' ); ?>:<br>
-		<input type="text" class="widefat" name="datos_informacion[tamano]" id="tamano" value="<?php echo strip_tags(get_datos_info('tamano')); ?>">
-	</p>
+    <p><?php echo __( 'Size', 'appyn' ); ?>:<br>
+        <input type="text" class="widefat" name="datos_informacion[tamano]" id="tamano" value="<?php echo strip_tags(get_datos_info('tamano')); ?>">
+    </p>
 
-	<p><?php echo __( 'Lanzamiento', 'appyn' ); ?>:<br>
-		<input type="text" class="widefat" name="datos_informacion[released_on]" id="released_on" value="<?php echo strip_tags(get_datos_info('released_on')); ?>"><input type="hidden" class="widefat" name="datos_informacion[released_on]" id="released_on" value="<?php echo strip_tags(get_datos_info('released_on')); ?>">
-	</p>
+    <p><?php echo __( 'Release Date', 'appyn' ); ?>:<br>
+        <input type="text" class="widefat" name="datos_informacion[released_on]" id="released_on" value="<?php echo strip_tags(get_datos_info('released_on')); ?>"><input type="hidden" class="widefat" name="datos_informacion[released_on]" id="released_on" value="<?php echo strip_tags(get_datos_info('released_on')); ?>">
+    </p>
 
-	<p><?php echo __( 'Última actualización', 'appyn' ); ?>:<br>
-		<input type="text" class="widefat" name="datos_informacion[fecha_actualizacion]" id="fecha_actualizacion" value="<?php echo strip_tags(get_datos_info('fecha_actualizacion')); ?>"><input type="hidden" class="widefat" name="datos_informacion[last_update]" id="last_update" value="<?php echo strip_tags(get_datos_info('last_update')); ?>">
-	</p>
+    <p><?php echo __( 'Last Update', 'appyn' ); ?>:<br>
+        <input type="text" class="widefat" name="datos_informacion[fecha_actualizacion]" id="fecha_actualizacion" value="<?php echo strip_tags(get_datos_info('fecha_actualizacion')); ?>"><input type="hidden" class="widefat" name="datos_informacion[last_update]" id="last_update" value="<?php echo strip_tags(get_datos_info('last_update')); ?>">
+    </p>
 
-	<p><?php echo __( 'Requerimientos', 'appyn' ); ?>:<br>
-		<input type="text" class="widefat" name="datos_informacion[requerimientos]" id="requerimientos" value="<?php echo strip_tags(get_datos_info('requerimientos')); ?>">
-	</p>
+    <p><?php echo __( 'Requirements', 'appyn' ); ?>:<br>
+        <input type="text" class="widefat" name="datos_informacion[requirements]" id="requirements" value="<?php echo strip_tags(get_datos_info('requirements')); ?>">
+    </p>
 
-	<p><?php echo __( 'Consíguelo en', 'appyn' ); ?>:<br>
-		<input type="text" class="widefat" name="datos_informacion[consiguelo]" id="consiguelo" value="<?php echo get_datos_info('consiguelo'); ?>">
-	</p>
+    <p><?php echo __( 'Get it at', 'appyn' ); ?>:<br>
+        <input type="text" class="widefat" name="datos_informacion[consiguelo]" id="consiguelo" value="<?php echo get_datos_info('consiguelo'); ?>">
+    </p>
 
-	<?php	
-		$new_rating_average = ( get_post_meta( $post->ID, 'new_rating_average', true ) ) ? get_post_meta( $post->ID, 'new_rating_average', true ) : 0;
-		$new_rating_users = ( get_post_meta( $post->ID, 'new_rating_users', true ) ) ? get_post_meta( $post->ID, 'new_rating_users', true ) : 0;
-		?>
-	<p><?php echo __( 'Rating', 'appyn' ); ?> (<?php echo __( 'Número de votos', 'appyn' ); ?>):<br>
-		<input type="number" min="0" class="widefat" name="new_rating_users" id="new_rating_users" value="<?php echo @$new_rating_users; ?>">
-	</p>
+    <?php   
+        $new_rating_average = ( get_post_meta( $post->ID, 'new_rating_average', true ) ) ? get_post_meta( $post->ID, 'new_rating_average', true ) : 0;
+        $new_rating_users = ( get_post_meta( $post->ID, 'new_rating_users', true ) ) ? get_post_meta( $post->ID, 'new_rating_users', true ) : 0;
+        ?>
+    <p><?php echo __( 'Rating', 'appyn' ); ?> (<?php echo __( 'Number of Votes', 'appyn' ); ?>):<br>
+        <input type="number" min="0" class="widefat" name="new_rating_users" id="new_rating_users" value="<?php echo @$new_rating_users; ?>">
+    </p>
 
-	<p><?php echo __( 'Rating', 'appyn' ); ?> (<?php echo __( 'Media', 'appyn' ); ?>):<br>
-		<input type="number" min="0" step="0.1" class="widefat" name="new_rating_average" id="new_rating_average" value="<?php echo @$new_rating_average; ?>" placeholder="4.5">
-	</p>
+    <p><?php echo __( 'Rating', 'appyn' ); ?> (<?php echo __( 'Average', 'appyn' ); ?>):<br>
+        <input type="number" min="0" step="0.1" class="widefat" name="new_rating_average" id="new_rating_average" value="<?php echo @$new_rating_average; ?>" placeholder="4.5">
+    </p>
 
-	<p><?php echo __( 'Descargas', 'appyn' ); ?>:<br>
-		<input type="text" class="widefat" name="datos_informacion[descargas]" id="descargas" value="<?php echo get_datos_info( 'descargas' ); ?>">
-	</p>
-	<p><?php echo __( 'Tipo de aplicación (Categoría)', 'appyn' ); ?>:
-		<select name="datos_informacion[categoria_app]">
-		<?php
-		$catsapp = px_cats_app();
-		foreach( $catsapp as $key => $cat ) {
-			echo '<option value="'.$key.'"'.selected( get_datos_info('categoria_app'), $key, false ).'>'.$cat.'</option>';
-		} ?></select>
-	</p>
+    <p><?php echo __( 'Downloads', 'appyn' ); ?>:<br>
+        <input type="text" class="widefat" name="datos_informacion[downloads]" id="downloads" value="<?php echo get_datos_info( 'downloads' ); ?>">
+    </p>
+    <p><?php echo __( 'Application Type (Category)', 'appyn' ); ?>:
+        <select name="datos_informacion[categoria_app]">
+        <?php
+        $catsapp = px_cats_app();
+        foreach( $catsapp as $key => $cat ) {
+            echo '<option value="'.$key.'"'.selected( get_datos_info('categoria_app'), $key, false ).'>'.$cat.'</option>';
+        } ?></select>
+    </p>
 
-	<p><?php echo __( 'Sistema operativo', 'appyn' ); ?>:
-		<label><input type="radio" name="datos_informacion[os]" value="ANDROID" <?php checked( get_datos_info('os'), 'ANDROID' ); ?> <?php echo (!isset( $datos_informacion['os'] ) ? 'checked' : ''); ?>> Android</label>&nbsp;
-		<label><input type="radio" name="datos_informacion[os]" value="iOS" <?php checked( get_datos_info('os'), 'iOS' ); ?>> iOS</label>&nbsp;
-		<label><input type="radio" name="datos_informacion[os]" value="MAC" <?php checked( get_datos_info('os'), 'MAC' ); ?>> Mac</label>&nbsp;
-		<label><input type="radio" name="datos_informacion[os]" value="WINDOWS" <?php checked( get_datos_info('os'), 'WINDOWS' ); ?>> Windows</label>&nbsp;
-		<label><input type="radio" name="datos_informacion[os]" value="LINUX" <?php checked( get_datos_info('os'), 'LINUX' ); ?>> Linux</label>
-	</p>
+    <p><?php echo __( 'Operating System', 'appyn' ); ?>:
+        <label><input type="radio" name="datos_informacion[os]" value="ANDROID" <?php checked( get_datos_info('os'), 'ANDROID' ); ?> <?php echo (!isset( $datos_informacion['os'] ) ? 'checked' : ''); ?>> Android</label>&nbsp;
+        <label><input type="radio" name="datos_informacion[os]" value="iOS" <?php checked( get_datos_info('os'), 'iOS' ); ?>> iOS</label>&nbsp;
+        <label><input type="radio" name="datos_informacion[os]" value="MAC" <?php checked( get_datos_info('os'), 'MAC' ); ?>> Mac</label>&nbsp;
+        <label><input type="radio" name="datos_informacion[os]" value="WINDOWS" <?php checked( get_datos_info('os'), 'WINDOWS' ); ?>> Windows</label>&nbsp;
+        <label><input type="radio" name="datos_informacion[os]" value="LINUX" <?php checked( get_datos_info('os'), 'LINUX' ); ?>> Linux</label>
+    </p>
 
-	<p><label><input type="radio" name="datos_informacion[offer][price]" value="gratis" <?php echo ( (empty(get_datos_info('offer', 'price') || get_datos_info('offer', 'price') == "gratis") ) ? ' checked' : ''); ?>> <?php echo __( 'Gratis', 'appyn' ); ?></label> &nbsp;
-		<label><input type="radio" name="datos_informacion[offer][price]" value="pago" <?php checked( get_datos_info('offer', 'price'), 'pago' ); ?>> <?php echo __( 'Pago', 'appyn' ); ?></label>
-		<label><input type="text" name="datos_informacion[offer][amount]" value="<?php echo get_datos_info('offer', 'amount'); ?>" placeholder="1.00" style="width: 50px;"></label>
-		<label><select name="datos_informacion[offer][currency]">
-		<?php 
-		$currencys = array( 'USD', 'EUR', 'AED', 'AFN', 'ALL', 'AMD', 'ANG', 'AOA', 'ARS', 'AUD', 'AWG', 'AZN', 'BAM', 'BBD', 'BDT', 'BGN', 'BHD', 'BIF', 'BMD', 'BND', 'BOB', 'BRL', 'BSD', 'BTN', 'BWP', 'BYN', 'BZD', 'CAD', 'CDF', 'CHF', 'CLP', 'CNY', 'COP', 'CRC', 'CUP', 'CVE', 'CZK', 'DJF', 'DKK', 'DOP', 'DZD', 'EGP', 'ERN', 'ETB', 'FJD', 'FKP', 'GBP', 'GEL', 'GGP', 'GHS', 'GIP', 'GMD', 'GNF', 'GTQ', 'GYD', 'HKD', 'HNL', 'HRK', 'HTG', 'HUF', 'IDR', 'ILS', 'IMP', 'INR', 'IQD', 'IRR', 'ISK', 'JEP', 'JMD', 'JOD', 'JPY', 'KES', 'KGS', 'KHR', 'KMF', 'KPW', 'KRW', 'KWD', 'KYD', 'KZT', 'LAK', 'LBP', 'LKR', 'LRD', 'LSL', 'LYD', 'MAD', 'MDL', 'MGA', 'MKD', 'MMK', 'MNT', 'MOP', 'MRU', 'MUR', 'MVR', 'MWK', 'MXN', 'MYR', 'MZN', 'NAD', 'NGN', 'NIO', 'NOK', 'NPR', 'NZD', 'OMR', 'PEN', 'PGK', 'PHP', 'PKR', 'PLN', 'PYG', 'QAR', 'RON', 'RSD', 'RUB', 'RWF', 'SAR', 'SBD', 'SCR', 'SDG', 'SEK', 'SGD', 'SHP', 'SLL', 'SOS', 'SRD', 'SSP', 'STN', 'SYP', 'SZL', 'THB', 'TJS', 'TMT', 'TND', 'TOP', 'TRY', 'TTD', 'TWD', 'TZS', 'UAH', 'UGX', 'UYU', 'UZS', 'VES', 'VND', 'VUV', 'WST', 'XAF', 'XCD', 'XDR', 'XOF', 'XPF', 'YER', 'ZAR', 'ZMW' );
+    <p><label><input type="radio" name="datos_informacion[offer][price]" value="gratis" <?php echo ( (empty(get_datos_info('offer', 'price') || get_datos_info('offer', 'price') == "gratis") ) ? ' checked' : ''); ?>> <?php echo __( 'Free', 'appyn' ); ?></label> &nbsp;
+        <label><input type="radio" name="datos_informacion[offer][price]" value="pago" <?php checked( get_datos_info('offer', 'price'), 'pago' ); ?>> <?php echo __( 'Paid', 'appyn' ); ?></label>
+        <label><input type="text" name="datos_informacion[offer][amount]" value="<?php echo get_datos_info('offer', 'amount'); ?>" placeholder="1.00" style="width: 50px;"></label>
+        <label><select name="datos_informacion[offer][currency]">
+        <?php 
+        $currencys = array( 'USD', 'EUR', 'AED', 'AFN', 'ALL', 'AMD', 'ANG', 'AOA', 'ARS', 'AUD', 'AWG', 'AZN', 'BAM', 'BBD', 'BDT', 'BGN', 'BHD', 'BIF', 'BMD', 'BND', 'BOB', 'BRL', 'BSD', 'BTN', 'BWP', 'BYN', 'BZD', 'CAD', 'CDF', 'CHF', 'CLP', 'CNY', 'COP', 'CRC', 'CUP', 'CVE', 'CZK', 'DJF', 'DKK', 'DOP', 'DZD', 'EGP', 'ERN', 'ETB', 'FJD', 'FKP', 'GBP', 'GEL', 'GGP', 'GHS', 'GIP', 'GMD', 'GNF', 'GTQ', 'GYD', 'HKD', 'HNL', 'HRK', 'HTG', 'HUF', 'IDR', 'ILS', 'IMP', 'INR', 'IQD', 'IRR', 'ISK', 'JEP', 'JMD', 'JOD', 'JPY', 'KES', 'KGS', 'KHR', 'KMF', 'KPW', 'KRW', 'KWD', 'KYD', 'KZT', 'LAK', 'LBP', 'LKR', 'LRD', 'LSL', 'LYD', 'MAD', 'MDL', 'MGA', 'MKD', 'MMK', 'MNT', 'MOP', 'MRU', 'MUR', 'MVR', 'MWK', 'MXN', 'MYR', 'MZN', 'NAD', 'NGN', 'NIO', 'NOK', 'NPR', 'NZD', 'OMR', 'PEN', 'PGK', 'PHP', 'PKR', 'PLN', 'PYG', 'QAR', 'RON', 'RSD', 'RUB', 'RWF', 'SAR', 'SBD', 'SCR', 'SDG', 'SEK', 'SGD', 'SHP', 'SLL', 'SOS', 'SRD', 'SSP', 'STN', 'SYP', 'SZL', 'THB', 'TJS', 'TMT', 'TND', 'TOP', 'TRY', 'TTD', 'TWD', 'TZS', 'UAH', 'UGX', 'UYU', 'UZS', 'VES', 'VND', 'VUV', 'WST', 'XAF', 'XCD', 'XDR', 'XOF', 'XPF', 'YER', 'ZAR', 'ZMW' );
+    
+        foreach( $currencys as $cur ) {
+            echo '<option value="'.$cur.'"'.selected( get_datos_info('offer', 'currency'), $cur, true ).'>'.$cur.'</option>';
+        } 
+        ?>
+            </select>
+    </p>
 
-		foreach( $currencys as $cur ) {
-			echo '<option value="'.$cur.'"'.selected( get_datos_info('offer', 'currency'), $cur, true ).'>'.$cur.'</option>';
-		} 
-		?>
-			</select>
-	</p>
+    <p><?php echo __( 'News', 'appyn' ); ?>:<br>
+        <?php wp_editor_fix( get_datos_info('novedades'), 'novedades', array('textarea_name' => 'datos_informacion[novedades]', 'textarea_rows' => 5)); ?>
+    </p>
 
-	<p><?php echo __( 'Novedades', 'appyn' ); ?>:<br>
-		<?php wp_editor_fix( get_datos_info('novedades'), 'novedades', array('textarea_name' => 'datos_informacion[novedades]', 'textarea_rows' => 5)); ?>
-	</p>
-
-<?php
+    <?php
 }
+
 
 function callback_video( $post ){
 	$datos_video = get_post_meta($post->ID, 'datos_video', true);
-?>
-<p>ID YouTube:<br>
-    <input type="text" class="widefat" id="id_video" name="datos_video[id]" placeholder="TkErUvyVlhA" value="<?php echo ( isset($datos_video['id']) ) ? $datos_video['id'] : ''; ?>">
-</p>
-<?php
+	?>
+	<p>ID YouTube:<br>
+		<input type="text" class="widefat" id="id_video" name="datos_video[id]" placeholder="TkErUvyVlhA" value="<?php echo ( isset($datos_video['id']) ) ? $datos_video['id'] : ''; ?>">
+	</p>
+	<?php
 }
 
-function callback_imagenes( $post ){
-	$datos_imagenes = get_post_meta($post->ID, 'datos_imagenes', true);
-	$datos_imagenes = !empty($datos_imagenes) ? $datos_imagenes : array();
-	$c = 4;
-	$input_upload = '<input class="upload_image_button button" type="button" value="'.__( 'Subir', 'appyn' ).'" style="width:auto; vertical-align:middle; font-family:inherit">';
-?>
-<script>
-jq1 = jQuery.noConflict();
-jq1(function($) {
-    var count = <?php echo $c; ?>;
-    $(document).on('click', '.removeimage', function() {
-        $(this).parents('p').remove();
-        count--;
+function callback_images( $post ){
+    $datos_imagenes = get_post_meta($post->ID, 'datos_imagenes', true);
+    $datos_imagenes = !empty($datos_imagenes) ? $datos_imagenes : array();
+    $c = 4;
+    $input_upload = '<input class="upload_image_button button" type="button" value="'.__( 'Upload', 'appyn' ).'" style="width:auto; vertical-align:middle; font-family:inherit">';
+    ?>
+    <script>
+    jq1 = jQuery.noConflict();
+    jq1(function($) {
+        var count = <?php echo $c; ?>;
+        $(document).on('click', '.removeimage', function() {
+            $(this).parents('p').remove();
+            count--;
+        });
+        $(".addImg").on('click', function() {
+            $(".ElementImagenes").append('<p><input type="text" name="datos_imagenes[' + count +
+                ']" value="" class="regular-text upload"><?php echo @$input_upload; ?><a href="javascript:void(0)" class="removeimage">X</a></p>'
+                );
+            count++;
+        });
     });
-    $(".addImg").on('click', function() {
-        $(".ElementImagenes").append('<p><input type="text" name="datos_imagenes[' + count +
-            ']" value="" class="regular-text upload"><?php echo @$input_upload; ?><a href="javascript:void(0)" class="removeimage">X</a></p>'
-            );
-        count++;
-    });
-});
-</script>
-<div class="ElementImagenes">
+    </script>
+    <div class="ElementImagenes">
     <div class="download"></div>
     <?php 
-	$n = 0;
+    if (!is_array($datos_imagenes)) {
+        // Nếu $datos_imagenes là chuỗi JSON, cố gắng giải mã nó
+        $decoded = json_decode($datos_imagenes, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $datos_imagenes = $decoded;
+        } else {
+            // Nếu không thể giải mã, gán giá trị mặc định là mảng rỗng
+            $datos_imagenes = [];
+            // Bạn cũng có thể log lỗi hoặc xử lý theo cách khác
+            error_log('Không thể giải mã $datos_imagenes thành mảng.');
+        }
+    }
 
-	if(count($datos_imagenes)>10){
+    // Khởi tạo biến $n
+    $n = 0;
 
-		foreach($datos_imagenes as $elemento) {
-			echo '<p><input type="text" name="datos_imagenes['.$n.']" value="'.( ( !empty($datos_imagenes[$n])) ? $datos_imagenes[$n] : '').'"  id="imagenes'.$n.'" class="regular-text upload">'.$input_upload.'</p>';
-			$n++; 
-		}
+    // Đảm bảo rằng $datos_imagenes là mảng và có thể đếm được
+    if (is_countable($datos_imagenes) && count($datos_imagenes) > 10) {
+
+        foreach($datos_imagenes as $elemento) {
+            echo '<p><input type="text" name="datos_imagenes[' . esc_attr($n) . ']" value="' . ( !empty($datos_imagenes[$n]) ? esc_attr($datos_imagenes[$n]) : '' ) . '" id="imagenes' . esc_attr($n) . '" class="regular-text upload">' . $input_upload . '</p>';
+            $n++; 
+        }
 
     } else { 
 
-		for($i=0;$i<10;$i++) {
-			echo '<p><input type="text" name="datos_imagenes['.$i.']" value="'. ( (!empty($datos_imagenes[$i])) ? $datos_imagenes[$i] : '').'" id="imagenes'.$i.'" class="regular-text upload">'.$input_upload.'</p>';
-		}  
+        for($i = 0; $i < 10; $i++) {
+            echo '<p><input type="text" name="datos_imagenes[' . esc_attr($i) . ']" value="' . ( !empty($datos_imagenes[$i]) ? esc_attr($datos_imagenes[$i]) : '' ) . '" id="imagenes' . esc_attr($i) . '" class="regular-text upload">' . $input_upload . '</p>';
+        }  
 
-	} 
+    } 
     echo '</div>
-    <p class="addImg button"><b>+ '.__( 'Añadir imágenes', 'appyn' ).'</b></p>';
+    <p class="addImg button"><b>+ '.__( 'Add images', 'appyn' ).'</b></p>';
 
-	wp_nonce_field( plugin_basename( __FILE__ ), 'dynamicMeta_noncename' );
+    wp_nonce_field( plugin_basename( __FILE__ ), 'dynamicMeta_noncename' );
 }
 
+
 function datos_download( $post ){
-	$post = $post;
-	$datos_download = get_datos_download();
-?>
+    $post = $post;
+    $datos_download = get_datos_download();
+    ?>
     <div class="download-direct">
         <ul class="dd-options">
             <?php if(empty($datos_download['option'])) { ?>
-				<li data-option="1" class="button active"><label><?php echo __( 'Enlaces de descarga', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="links" style="display:none;"></label></li>
-				<li data-option="2" class="button"><label><?php echo __( 'Enlace directo / Redirección', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="direct-link" style="display:none;"></label>
-				</li>
-				<li data-option="3" class="button"><label><?php echo __( 'Descarga directa', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="direct-download" style="display:none;"></label></li>
+                <li data-option="1" class="button active"><label><?php echo __( 'Download Links', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="links" style="display:none;"></label></li>
+                <li data-option="2" class="button"><label><?php echo __( 'Direct Link / Redirect', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="direct-link" style="display:none;"></label>
+                </li>
+                <li data-option="3" class="button"><label><?php echo __( 'Direct Download', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="direct-download" style="display:none;"></label></li>
             <?php } else { ?>
-				<li data-option="1" class="button<?php echo (!$datos_download['option'] || $datos_download['option'] == "links") ? ' active': ''; ?>"><label><?php echo __( 'Enlaces de descarga', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="links" style="display:none;"></label></li>
-				<li data-option="2" class="button<?php echo ($datos_download['option'] == "direct-link") ? ' active': ''; ?>"><label><?php echo __( 'Enlace directo / Redirección', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="direct-link" style="display:none;"></label></li>
-				<li data-option="3" class="button<?php echo ($datos_download['option'] == "direct-download") ? ' active': ''; ?>"> <label><?php echo __( 'Descarga directa', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="direct-download" style="display:none;"></label></li>
+                <li data-option="1" class="button<?php echo (!$datos_download['option'] || $datos_download['option'] == "links") ? ' active': ''; ?>"><label><?php echo __( 'Download Links', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="links" style="display:none;"></label></li>
+                <li data-option="2" class="button<?php echo ($datos_download['option'] == "direct-link") ? ' active': ''; ?>"><label><?php echo __( 'Direct Link / Redirect', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="direct-link" style="display:none;"></label></li>
+                <li data-option="3" class="button<?php echo ($datos_download['option'] == "direct-download") ? ' active': ''; ?>"> <label><?php echo __( 'Direct Download', 'appyn' ); ?><input type="radio" name="datos_download[option]" value="direct-download" style="display:none;"></label></li>
             <?php } ?>
         </ul>
     </div>
-    <?php 	
-	$ddf = (isset($datos_download['type'])) ? $datos_download['type'] : 'apk';
-	?>
-    <?php echo __( 'Tipo de archivos', 'appyn' ); ?>
-    <?php echo px_label_help( sprintf( __( 'Marque qué tipo de archivo el usuario descargará. Gracias a esto podrá mostrar unos pasos según el tipo de opción escogida. <a href="%s">Ver/Editar los pasos</a>', 'appyn' ), admin_url('admin.php?page=appyn_panel#general') ) ); ?>
+    <?php   
+    $ddf = (isset($datos_download['type'])) ? $datos_download['type'] : 'apk';
+    ?>
+    <?php echo __( 'File Type', 'appyn' ); ?>
+    <?php echo px_label_help( sprintf( __( 'Select the type of file the user will download. Thanks to this, you can display steps based on the chosen option. <a href="%s">View/Edit the steps</a>', 'appyn' ), admin_url('admin.php?page=appyn_panel#general') ) ); ?>
 
     <p>
         <input type="radio" name="datos_download[type]" value="apk" <?php echo checked($ddf, 'apk'); ?>>APK &nbsp;
@@ -755,76 +711,77 @@ function datos_download( $post ){
     </p>
     <?php if(empty($datos_download['option'])) { ?>
     <div class="dd-content" data-option="1" style="display:block;">
-	<?php } elseif(!$datos_download['option']) { ?>
-	<div class="dd-content" data-option="1" style="display:block;">
-	<?php } else { ?>
-	<div class="dd-content" data-option="1" <?php echo ($datos_download['option'] == "links") ? ' style="display:block;"': ' style="display:none";'; ?>>
-	<?php } ?>
+    <?php } elseif(!$datos_download['option']) { ?>
+    <div class="dd-content" data-option="1" style="display:block;">
+    <?php } else { ?>
+    <div class="dd-content" data-option="1" <?php echo ($datos_download['option'] == "links") ? ' style="display:block;"': ' style="display:none";'; ?>>
+    <?php } ?>
 
-		<p><em><?php echo __( 'Para eliminar un campo solo déjelo vacío', 'appyn' ); ?>.</em><br>
-			<em><?php echo __("Enlaces 'nofollow' por defecto", 'appyn'); ?>.</em>
-		</p>
-		<div class="ElementLinks">
-			<table style="width:100%;">
-				<thead>
-					<tr>
-						<th></th>
-						<th style="width:60%;"><?php echo __( 'Enlace', 'appyn' ); ?></th>
-						<th><?php echo __( 'Texto', 'appyn' ); ?></th>
-						<th><?php echo __( 'Atributo', 'appyn' ); ?></th>
-						<th style="width:30px;"></th>
-					</tr>
-				</thead>
-				<tbody id="tbodylinks">
-					<?php
+        <p><em><?php echo __( 'To remove a field, just leave it empty', 'appyn' ); ?>.</em><br>
+            <em><?php echo __("Links 'nofollow' by default", 'appyn'); ?>.</em>
+        </p>
+        <div class="ElementLinks">
+            <table style="width:100%;">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th style="width:60%;"><?php echo __( 'Link', 'appyn' ); ?></th>
+                        <th><?php echo __( 'Text', 'appyn' ); ?></th>
+                        <th><?php echo __( 'Attribute', 'appyn' ); ?></th>
+                        <th style="width:30px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodylinks">
+                    <?php
+					$px_app_id = get_post_meta( $post->ID, 'px_app_id', true );
+                    $list_count = !empty($datos_download['links_options']) ? count($datos_download['links_options']) : 1;
 
-					$list_count = !empty($datos_download['links_options']) ? count($datos_download['links_options']) : 3;
+                    for( $i=0; $i<$list_count; $i++ ) {
 
-					for( $i=0; $i<$list_count; $i++ ) {
+                        $link = isset($datos_download['links_options'][$i]['link']) ? $datos_download['links_options'][$i]['link'] : 'https://modgara.com/downloads/ggplay/'.$px_app_id.'.apk';
 
-						$link = isset($datos_download['links_options'][$i]['link']) ? $datos_download['links_options'][$i]['link'] : '';
+                        if( appyn_options( 'shortlink_disabled' ) ) {
+                            $link = isset($datos_download['links_options'][$i]['link_original']) ? $datos_download['links_options'][$i]['link_original'] : $link;
+                        }
 
-						if( appyn_options( 'shortlink_disabled' ) ) {
-							$link = isset($datos_download['links_options'][$i]['link_original']) ? $datos_download['links_options'][$i]['link_original'] : $link;
-						}
+                        $text = isset($datos_download['links_options'][$i]['texto']) ? $datos_download['links_options'][$i]['texto'] : 'Download';
 
-						$text = isset($datos_download['links_options'][$i]['texto']) ? $datos_download['links_options'][$i]['texto'] : '';
-
-						$follow = isset($datos_download['links_options'][$i]['follow']) ? $datos_download['links_options'][$i]['follow'] : '';
-					?>
-						<tr>
-							<td><span class="dashicons dashicons-move"></span></td>
-							<td><input type="text" name="datos_download[<?php echo $i; ?>][link]" value="<?php echo $link; ?>" class="widefat">
-								<input type="hidden" name="datos_download[<?php echo $i; ?>][link_original]" value="<?php echo ( isset($datos_download['links_options'][$i]['link_original'] ) ? $datos_download['links_options'][$i]['link_original'] : ''); ?>">
-								<input type="hidden" name="datos_download[<?php echo $i; ?>][shortlink]" value="<?php echo ( isset($datos_download['links_options'][$i]['shortlink'] ) ? $datos_download['links_options'][$i]['shortlink'] : ''); ?>">
-							</td>
-							<td><input type="text" name="datos_download[<?php echo $i; ?>][texto]" value="<?php echo $text; ?>" class="widefat"></td>
-							<td><label><input type="checkbox" value="1" name="datos_download[<?php echo $i; ?>][follow]" <?php checked($follow, '1'); ?>> Follow</label></td>
-						</tr>
-						<?php
-					} ?>
-				</tbody>
-			</table>
-		</div>
-		<p class="addLink button"><b>+ <?php echo __( 'Añadir enlace', 'appyn' ); ?></b></p>
-		<p><a href="https://themespixel.net/en/docs/appyn/posts/#doc4" target="_blank"><?php echo __( 'Ver en la documentación', 'appyn' ); ?></a></p>
-	</div>
-	<?php
-	$dd = get_datos_download();
-	$d_option = (isset($dd['option'])) ? $dd['option'] : null;
-	?>
-	<div class="dd-content" data-option="2" <?php echo ( $d_option == "direct-link" ) ? 'style="display:block;"': ''; ?>>
-		<p><?php echo __( 'Enlace directo / Redirección', 'appyn' ); ?><br>
-			<input type="text" placeholder="Link" class="widefat" name="datos_download[direct-link]" value="<?php echo ( isset($datos_download['direct-link']) ) ? $datos_download['direct-link'] : ''; ?>">
-		</p>
-	</div>
-	<div class="dd-content" data-option="3" <?php echo ($d_option == "direct-download") ? 'style="display:block;"': ''; ?>>
-		<p><?php echo __( 'Descarga directa', 'appyn' ); ?><br>
-			<input type="text" placeholder="File link" name="datos_download[direct-download]" value="<?php echo ( isset($datos_download['direct-download']) ) ? $datos_download['direct-download'] : ''; ?>" class="upload" style="width:500px;"><input class="upload_image_button button" type="button" value="<?php echo __( 'Subir', 'appyn' ); ?>" style="width: auto;vertical-align: middle;font-family: inherit;">
-		</p>
-	</div>
-	<?php
+                        $follow = isset($datos_download['links_options'][$i]['follow']) ? $datos_download['links_options'][$i]['follow'] : '';
+                    ?>
+                        <tr>
+                            <td><span class="dashicons dashicons-move"></span></td>
+                            <td><input type="text" name="datos_download[<?php echo $i; ?>][link]" value="<?php echo $link; ?>" class="widefat">
+                                <input type="hidden" name="datos_download[<?php echo $i; ?>][link_original]" value="<?php echo ( isset($datos_download['links_options'][$i]['link_original'] ) ? $datos_download['links_options'][$i]['link_original'] : ''); ?>">
+                                <input type="hidden" name="datos_download[<?php echo $i; ?>][shortlink]" value="<?php echo ( isset($datos_download['links_options'][$i]['shortlink'] ) ? $datos_download['links_options'][$i]['shortlink'] : ''); ?>">
+                            </td>
+                            <td><input type="text" name="datos_download[<?php echo $i; ?>][texto]" value="<?php echo $text; ?>" class="widefat"></td>
+                            <td><label><input type="checkbox" value="1" name="datos_download[<?php echo $i; ?>][follow]" <?php checked($follow, '1'); ?>> Follow</label></td>
+                        </tr>
+                        <?php
+                    } ?>
+                </tbody>
+            </table>
+        </div>
+        <p class="addLink button"><b>+ <?php echo __( 'Add link', 'appyn' ); ?></b></p>
+        <p><a href="https://themespixel.net/en/docs/appyn/posts/#doc4" target="_blank"><?php echo __( 'See in the documentation', 'appyn' ); ?></a></p>
+    </div>
+    <?php
+    $dd = get_datos_download();
+    $d_option = (isset($dd['option'])) ? $dd['option'] : null;
+    ?>
+    <div class="dd-content" data-option="2" <?php echo ( $d_option == "direct-link" ) ? 'style="display:block;"': ''; ?>>
+        <p><?php echo __( 'Direct Link / Redirect', 'appyn' ); ?><br>
+            <input type="text" placeholder="Link" class="widefat" name="datos_download[direct-link]" value="<?php echo ( isset($datos_download['direct-link']) ) ? $datos_download['direct-link'] : ''; ?>">
+        </p>
+    </div>
+    <div class="dd-content" data-option="3" <?php echo ($d_option == "direct-download") ? 'style="display:block;"': ''; ?>>
+        <p><?php echo __( 'Direct Download', 'appyn' ); ?><br>
+            <input type="text" placeholder="File link" name="datos_download[direct-download]" value="<?php echo ( isset($datos_download['direct-download']) ) ? $datos_download['direct-download'] : ''; ?>" class="upload" style="width:500px;"><input class="upload_image_button button" type="button" value="<?php echo __( 'Upload', 'appyn' ); ?>" style="width: auto;vertical-align: middle;font-family: inherit;">
+        </p>
+    </div>
+    <?php
 }
+
 
 function replace_r_n_n( $var ) {
 	$var = str_replace("\r\n", "\n", $var );
@@ -918,11 +875,12 @@ function px_quote_meta_save( $id ) {
 		update_post_meta( $id, "app_type", $_POST['app_type'] );
 	}
 	
-	delete_post_meta( $id, "appyn_ads_control" );
-	if( isset($_POST['appyn_ads_control']) ) {
-		update_post_meta( $id, "appyn_ads_control", $_POST['appyn_ads_control'] );
+
+	 // Kiểm tra và lưu lựa chọn quảng cáo
+	 delete_post_meta( $id, "appyn_selected_ad" );
+	if( isset($_POST['appyn_selected_ad']) ) {
+		update_post_meta( $id, "appyn_selected_ad", $_POST['appyn_selected_ad'] );
 	}
-	
 	delete_post_meta( $id, "appyn_hidden_sidebar" );
 	if( isset($_POST['appyn_hidden_sidebar']) ) {
 		update_post_meta( $id, "appyn_hidden_sidebar", $_POST['appyn_hidden_sidebar'] );
@@ -969,34 +927,35 @@ function div_comment_content( $comment_text ) {
 	$comment_text = '<div class="comment-content">'.wpautop($comment_text).'</div>';
 	return $comment_text;
 }
-
-require_once( TEMPLATEPATH . '/includes/template-functions.php' );
-require_once( TEMPLATEPATH . '/includes/template-actions.php' );
-require_once( TEMPLATEPATH . '/includes/template-tags.php' );
-require_once( TEMPLATEPATH . '/includes/admin.php' );
-require_once( TEMPLATEPATH . '/includes/ajax.php' );
-require_once( TEMPLATEPATH . '/includes/widget-ultimos-posts.php' );
-require_once( TEMPLATEPATH . '/includes/widget-mejor-calificados.php' );
-require_once( TEMPLATEPATH . '/includes/widget-mas-vistos.php' );
-require_once( TEMPLATEPATH . '/includes/widget-facebook.php' );
-require_once( TEMPLATEPATH . '/includes/widget-twitter.php' );
-require_once( TEMPLATEPATH . '/includes/widget-youtube.php' );
-require_once( TEMPLATEPATH . '/includes/widget-ultimos-posts-blog.php' );
-require_once( TEMPLATEPATH . '/includes/widget-mas-vistos-blog.php' );
-require_once( TEMPLATEPATH . '/includes/widget-mas-calificados.php' );
-require_once( TEMPLATEPATH . '/includes/widget-categories.php' );
-require_once( TEMPLATEPATH . '/includes/widget-fixed.php' );
-require_once( TEMPLATEPATH . '/includes/class-list-table-atul.php' );
-require_once( TEMPLATEPATH . '/includes/class-list-table-modapps.php' );
-require_once( TEMPLATEPATH . '/includes/class-list-table-latestapps.php' );
-require_once( TEMPLATEPATH . '/includes/class-upload-apk.php' );
-require_once( TEMPLATEPATH . '/includes/class-google-drive.php' );
-require_once( TEMPLATEPATH . '/includes/class-dropbox.php' );
-require_once( TEMPLATEPATH . '/includes/class-ftp.php' );
-require_once( TEMPLATEPATH . '/includes/class-1fichier.php' );
-require_once( TEMPLATEPATH . '/includes/class-onedrive.php' );
-require_once( TEMPLATEPATH . '/includes/class-shortlinks.php' );
-require_once( TEMPLATEPATH . '/admin/class-eps.php' );
+require_once( TEMPLATEPATH . '-child/includes/flatsome.php' );
+require_once( TEMPLATEPATH . '-child/includes/template-functions.php' );
+require_once( TEMPLATEPATH . '-child/includes/template-actions.php' );
+require_once( TEMPLATEPATH . '-child/includes/template-tags.php' );
+require_once( TEMPLATEPATH . '-child/includes/admin.php' );
+require_once( TEMPLATEPATH . '-child/includes/ajax.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-ultimos-posts.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-mejor-calificados.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-mas-vistos.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-facebook.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-twitter.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-youtube.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-ultimos-posts-blog.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-mas-vistos-blog.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-mas-calificados.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-categories.php' );
+require_once( TEMPLATEPATH . '-child/includes/widget-fixed.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-list-table-atul.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-list-table-modapps.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-list-table-latestapps.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-upload-apk.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-google-drive.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-dropbox.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-ftp.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-1fichier.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-onedrive.php' );
+require_once( TEMPLATEPATH . '-child/includes/class-shortlinks.php' );
+require_once( TEMPLATEPATH . '-child/includes/crawdata.php' );
+require_once( TEMPLATEPATH . '-child/admin/class-eps.php' );
 
 add_action( 'wp_head', 'add_my_favicon' );
 add_action( 'admin_head', 'add_my_favicon' ); 
@@ -1004,7 +963,7 @@ add_action( 'admin_head', 'add_my_favicon' );
 function add_my_favicon() {
 	global $post;
 	$favicon = get_option( 'appyn_favicon' );
-	$favicon = ( !empty($favicon) ) ? $favicon: get_bloginfo('template_url').'/images/favicon.ico';
+	$favicon = ( !empty($favicon) ) ? $favicon: get_stylesheet_directory_uri().'/images/favicon.ico';
 	echo '<link rel="icon" href="'.$favicon.'">';
 }
 
@@ -1047,7 +1006,7 @@ function add_head() {
 		};
 		xhr.send();
 	};
-	loadFont('".get_template_directory_uri()."/assets/css/font-awesome-6.4.2.min.css');
+	loadFont('".get_stylesheet_directory_uri()."/assets/css/font-awesome-6.4.2.min.css');
 	</script>
 	";
 	echo ( ! httuachl() ) ? str_replace(array("\n", "\t"), "", str_replace("  ", " ", $script_loadfont)) : '';
@@ -1476,14 +1435,15 @@ add_action( 'wp_enqueue_scripts', 'theme_scripts' );
 
 function theme_scripts() {
 	if( !wp_is_mobile() ) {
-		wp_enqueue_style( 'style', get_bloginfo( "template_directory" ).'/style.min.css', false, VERSIONPX, 'all' ); 
+		wp_enqueue_style( 'style', get_stylesheet_directory_uri().'/style.min.css', false, VERSIONPX, 'all' ); 
 	}
 
 	if( appyn_options( 'infinite_scroll' ) )
-		wp_enqueue_script( 'px-infinite-scroll', get_bloginfo("template_directory").'/assets/js/infinite-scroll.pkgd.min.js', false, VERSIONPX, true ); 
+		wp_enqueue_script( 'px-infinite-scroll', get_stylesheet_directory_uri().'/assets/js/infinite-scroll.pkgd.min.js', false, VERSIONPX, true ); 
 
 	wp_enqueue_script( 'jquery' );
-	wp_enqueue_script( 'px-js', get_bloginfo( "template_directory" ).'/assets/js/js.min.js', array('jquery'), VERSIONPX, true );
+	wp_enqueue_script( 'px-js', get_stylesheet_directory_uri().'/assets/js/js.min.js', array('jquery'), VERSIONPX, true );
+	wp_enqueue_script('wsm-admin-script', get_stylesheet_directory_uri() . 'assets/js/admin.js', array('jquery'), VERSIONPX, true);
 
 	$readmore_single = stripslashes(get_option( 'appyn_readmore_single' ));
 	$o = '';
@@ -1579,7 +1539,7 @@ function function_pregetposts( $query ) {
 			} 
 		}
 		if( $query->is_tax('dev') ) {
-			if( get_option( 'appyn_versiones_mostrar_tax_desarrollador') == 1 ) {
+			if( get_option( 'appyn_versiones_mostrar_tax_Developer') == 1 ) {
 				$query->set('post_parent', 0);
 			} 
 		}
@@ -2119,7 +2079,7 @@ class PX_Menu_AMP extends Walker_Nav_Menu {
         $indent = str_repeat("\t", $depth);
         $output .= "\n$indent<div amp-nested-submenu><ul>
 		<li>
-		  <span amp-nested-submenu-close><i class=\"fa fa-chevron-left\"></i> ".__( 'Regresar', 'appyn' )."</span>
+		  <span amp-nested-submenu-close><i class=\"fa fa-chevron-left\"></i> ".__( 'Back', 'appyn' )."</span>
 		</li>\n";
     }
 }
@@ -2210,4 +2170,119 @@ function px_pgp_add_filter_menu($query) {
 	}
 	return $query;
 }
-remove_action( 'admin_notices', 'admin_notice_update' );
+
+
+function flatsome_child_remove_default_styles() {
+    // Deregister Flatsome's default styles
+    wp_dequeue_style('flatsome-main');
+    wp_deregister_style('flatsome-main');
+
+    // Deregister other Flatsome styles if necessary
+    wp_dequeue_style('flatsome-theme-style');
+    wp_deregister_style('flatsome-theme-style');
+}
+add_action('wp_enqueue_scripts', 'flatsome_child_remove_default_styles', 20);
+function remove_flatsome_css() {
+    // Lấy danh sách tất cả các styles được enqueue
+    global $wp_styles;
+    
+    // Kiểm tra xem styles nào đến từ theme Flatsome và xóa chúng
+    foreach( $wp_styles->queue as $handle ) {
+        if ( strpos( $wp_styles->registered[$handle]->src, 'flatsome' ) !== false ) {
+            wp_dequeue_style( $handle );
+            wp_deregister_style( $handle );
+        }
+    }
+}
+add_action('wp_enqueue_scripts', 'remove_flatsome_css', 20);
+
+
+
+
+function register_version_variable_for_yoast() {
+    if ( class_exists( 'WPSEO_Frontend' ) ) {
+        wpseo_register_var_replacement( '%%Version%%', 'get_custom_version_meta', 'advanced', 'Version from custom field' );
+    }
+}
+add_action( 'wpseo_register_extra_replacements', 'register_version_variable_for_yoast' );
+
+// Hàm để lấy giá trị version từ custom field
+function get_custom_version_meta( $replacement, $args ) {
+    global $post;
+
+    // Lấy giá trị từ custom field 'datos_informacion'
+    $datos_informacion = get_post_meta( $post->ID, 'datos_informacion', true );
+
+    // Kiểm tra xem 'version' có tồn tại trong custom field không
+    if ( is_array( $datos_informacion ) && isset( $datos_informacion['version'] ) ) {
+        return "- Version ".esc_html( $datos_informacion['version'] );
+    }
+
+    return '';
+}
+function force_update_yoast_meta_preview() {
+    if ( get_the_ID() ) { // Kiểm tra nếu có giá trị post ID
+        $datos_informacion = get_post_meta( get_the_ID(), 'datos_informacion', true );
+
+        // Kiểm tra nếu datos_informacion và version tồn tại
+        if ( is_array( $datos_informacion ) && isset( $datos_informacion['version'] ) ) {
+            ?>
+            <script type="text/javascript">
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Lấy giá trị thực của version từ PHP
+                    var version = '<?php echo "- Version " . esc_js( $datos_informacion['version'] ); ?>';
+                    if (!version) {
+                        version = '- Version 1.0'; // Giá trị mặc định nếu không có version
+                    }
+
+                    // Hàm thay thế %%Version%% trong thẻ #wpseo_meta
+                    function updateYoastMetaPreview() {
+                        var wpseoMeta = document.querySelector('.hFjSGk'); // Tìm thẻ với id là wpseo_meta
+                        
+                        if (wpseoMeta) {
+                            var metaText = wpseoMeta.innerHTML; // Lấy nội dung của thẻ
+
+                            // Kiểm tra và thay thế %%Version%%
+                            if (metaText.includes('%%Version%%')) {
+                                var newMetaText = metaText.replace(/%%Version%%/g, version);
+                                wpseoMeta.innerHTML = newMetaText; // Cập nhật lại nội dung thẻ
+                            }
+                        }
+
+						var wpseoMeta2 = document.querySelector('.iEkGYV'); // Tìm thẻ với id là wpseo_meta
+                        
+                        if (wpseoMeta2) {
+                            var metaText = wpseoMeta2.innerHTML; // Lấy nội dung của thẻ
+
+                            // Kiểm tra và thay thế %%Version%%
+                            if (metaText.includes('%%Version%%')) {
+                                var newMetaText = metaText.replace(/%%Version%%/g, version);
+                                wpseoMeta2.innerHTML = newMetaText; // Cập nhật lại nội dung thẻ
+                            }
+                        }
+                    }
+
+                    // Sử dụng MutationObserver để theo dõi sự thay đổi của DOM
+                    var targetNode = document.querySelector('body'); // Theo dõi toàn bộ body
+                    if (targetNode) {
+                        var observer = new MutationObserver(function(mutationsList, observer) {
+                            updateYoastMetaPreview(); // Gọi hàm update mỗi khi DOM thay đổi
+                        });
+
+                        // Theo dõi các thay đổi trong cây DOM
+                        observer.observe(targetNode, {
+                            childList: true,
+                            subtree: true
+                        });
+
+                        // Gọi hàm lần đầu để cập nhật ngay lập tức
+                        updateYoastMetaPreview();
+                    }
+                });
+            </script>
+            <?php
+        }
+    }
+}
+add_action('admin_footer', 'force_update_yoast_meta_preview');
+

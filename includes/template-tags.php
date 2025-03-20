@@ -95,7 +95,7 @@ function px_header_social() {
 
 function app_developer() {
 	global $post;
-	$developer = get_datos_info( 'desarrollador', false, $post->ID );
+	$developer = get_datos_info( 'developer', false, $post->ID );
     $output = '';
 	if( !empty($developer) ) {
 		$output = '<span class="developer">'.$developer.'</span>';
@@ -144,5 +144,5 @@ function app_version() {
 	global $post;
 	$version = get_datos_info( 'version', false, $post->ID );
 	
-	return $version ? '<span class="version">'.px_post_mod().'<span>'.$version.'</span></span>' : '';
+	return $version ? '<span class="version">'.px_post_mod().'<span>'.$version.'</span></span>' : '<span class="version"></span>';
 }
